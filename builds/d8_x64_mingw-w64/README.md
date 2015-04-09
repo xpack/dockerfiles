@@ -6,6 +6,7 @@ It also includes the packages created by [Stefan Weil](http://qemu.weilnetz.de/d
 
 To create the new image use
 
-    docker build --tag "qemu-win-builds:d8-mingw-w64" https://raw.githubusercontent.com/ilg-ul/docker/master/builds/d8_x64_mingw-w64/Dockerfile
+    docker build --tag "qemu-win-builds:d8-mingw-w64" \
+    https://raw.githubusercontent.com/ilg-ul/docker/master/builds/d8_x64_mingw-w64/Dockerfile
 
 
