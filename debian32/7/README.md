@@ -18,5 +18,6 @@ To create the rootfs.tar.xz archive, use:
 
 To create the Docker image, use:
 
-	docker build --tag "debian32:7" \
-    https://raw.githubusercontent.com/ilg-ul/docker/master/debian32/7/Dockerfile
+	git clone https://github.com/ilg-ul/docker.git docker.git
+	cd docker.git/debian32/7
+	docker build --tag "ilegeul/debian32:7" .

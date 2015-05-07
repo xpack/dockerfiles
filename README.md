@@ -1,4 +1,4 @@
-Docker related files.
+These are the Docker files used to create several Docker images, mainly used in builds.
 
 # debian
 

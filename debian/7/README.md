@@ -6,7 +6,7 @@ Prerequisites:
 	sudo apt-get upgrade
 	sudo apt-get install debootstrap
 
-To create the new image use:
+To create the rootfs.tar.xz archive, use:
 
 	mkdir docker
 	cd docker
@@ -14,5 +14,9 @@ To create the new image use:
 	sudo docker.git/contrib/mkimage.sh -d . debootstrap --variant=minbase --components=main --include=inetutils-ping,iproute \
     	wheezy http://httpredir.debian.org/debian
 
+To create the Docker image, use:
 
+	git clone https://github.com/ilg-ul/docker.git docker.git
+	cd docker.git/debian/7
+	docker build --tag "ilegeul/debian:7" .
 
