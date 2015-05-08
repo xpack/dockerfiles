@@ -1,8 +1,8 @@
-Dockerfile to create a Docker image to be used as Debian 7 32-bit base.
+Dockerfile to create a Docker image to be used as Debian 7 32-bits base.
 
 Prerequisites:
 
-A running minimal Debian 7 32-bit system, with:
+A running minimal Debian 7 32-bits system, with:
 
 	sudo apt-get update
 	sudo apt-get upgrade

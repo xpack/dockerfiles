@@ -1,4 +1,4 @@
-Dockerfile to create a Docker image to be used as Debian 7 64-bit base.
+Dockerfile to create a Docker image to be used as Debian 7 64-bits base.
 
 Prerequisites:
 
