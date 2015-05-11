@@ -20,3 +20,7 @@ To create the Docker image, use:
 	cd docker.git/debian/7
 	docker build --tag "ilegeul/debian:7" .
 
+To publish the Docker image on [Docker Hub](https://hub.docker.com/u/ilegeul/), use:
+
+	docker push ilegeul/debian:7
+

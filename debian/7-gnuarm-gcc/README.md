@@ -7,7 +7,6 @@ Prerequisites:
 
 To create the Docker image, use:
 
-	git clone https://github.com/ilg-ul/docker.git docker.git
-	cd docker.git/debian/7-gnuarm-gcc
-	docker build --tag "ilegeul/debian:7-gnuarm-gcc" .
+	docker build --tag "ilegeul/debian:7-gnuarm-gcc" \
+	https://github.com/ilg-ul/docker/raw/master/debian/7-gnuarm-gcc/Dockerfile
 
