@@ -7,8 +7,3 @@ Debian 64-bits images.
 # debian32
 
 Debian 32-bits images.
-
-# builds
-
-Dockerfiles used to create Docker images used for various builds.
-
