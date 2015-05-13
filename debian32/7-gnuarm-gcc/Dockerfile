@@ -1,6 +1,7 @@
 FROM ilegeul/debian32:7
 MAINTAINER Liviu Ionescu <ilg@livius.net>
 ENTRYPOINT ["linux32"]
+WORKDIR /root
 
 RUN \
 apt-get -y update && \

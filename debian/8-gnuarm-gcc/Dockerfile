@@ -1,4 +1,4 @@
-FROM ilegeul/debian:7
+FROM debian:8
 MAINTAINER Liviu Ionescu <ilg@livius.net>
 WORKDIR /root
 
@@ -15,3 +15,4 @@ libudev-dev libconfuse-dev libboost1.49-dev \
 texinfo texlive bison flex doxygen
 
 CMD ["/bin/bash"]
+
