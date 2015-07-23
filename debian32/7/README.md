@@ -13,7 +13,8 @@ To create the rootfs.tar.xz archive, use:
 	mkdir docker
 	cd docker
 	git clone https://github.com/docker/docker.git docker.git
-	sudo docker.git/contrib/mkimage.sh -d . debootstrap --variant=minbase --components=main \
+	sudo docker.git/contrib/mkimage.sh -d . debootstrap \
+		--variant=minbase --components=main \
 		--include=inetutils-ping,iproute \
     	wheezy http://httpredir.debian.org/debian
 

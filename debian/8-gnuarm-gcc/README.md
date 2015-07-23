@@ -10,3 +10,8 @@ To create the Docker image, use:
 	docker build --tag "ilegeul/debian:8-gnuarm-gcc" \
 	https://github.com/ilg-ul/docker/raw/master/debian/8-gnuarm-gcc/Dockerfile
 
+To create the Docker image locally, use:
+
+	cd ...
+	docker build --tag "ilegeul/debian:8-gnuarm-gcc" -f Dockerfile .
+
