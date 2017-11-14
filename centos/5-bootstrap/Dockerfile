@@ -4,7 +4,7 @@ WORKDIR /root
 
 ADD image /xbb-input
 RUN \
-bash -x /xbb-input/build.sh
+time bash -x /xbb-input/build.sh
 
 CMD ["/bin/bash"]
 
