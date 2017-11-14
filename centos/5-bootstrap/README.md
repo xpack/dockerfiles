@@ -8,7 +8,7 @@ Dockerfile to create a Docker image based on the latest CentOS 5 64-bits develop
 
 Using the original development tools, build newer versions of the tools from sources. 
 
-Due to the limitations of the GCC 4.1, they are not the final tools, but a new enough to build a modern GCC, which will be used to build the final tools & libraries.
+Due to the limitations of the old GCC 4.1, they are not the final tools, but new enough to build a modern GCC, which will be used to build the final tools & libraries.
 
 The script builds:
 
@@ -22,7 +22,8 @@ The script builds:
     - pkg_config
 
 Since access to the current download sites requires https, and the old `curl` does not know it, the `openssl` and `curl` archives are provided directly to the script.
- 
+
+This step installs the newly created tools in `/opt/xbb-bootstrap`, using several temporary folders.
 
 ### Developer
 

@@ -1,9 +1,11 @@
-## Docker file to create CentOS images
+## Docker files to create CentOS images
 
-The idea is to layer several images, from simple to complex, aiming an image with a set of modern tools, but based on a very conservative set of system libraries, such that it has good chances to run on as many distributions, new or old.
+The idea is to layer several images, from simple to complex, aiming to an image with a set of modern tools, but based on a very conservative set of system libraries, that can be used to build applications that have a good chance to run on as many GNU/Linux distributions, new or old.
+
+To test the images, use something like:
 
 ```console
-$ docker run --interactive --tty ilegeul/centos:5-final
+$ docker run --interactive --tty ilegeul/centos:5-bootstrap
 ```
 
 ### 5-final
