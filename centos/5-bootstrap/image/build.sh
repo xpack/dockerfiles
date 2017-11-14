@@ -21,15 +21,16 @@ IFS=$'\n\t'
 
 # Inspired by Holy Build Box build script.
 
-XBB=/opt/xbb
 XBB_INPUT=/xbb-input
-
 XBB_TMP=/tmp/xbb
-XBB_BUILD=$XBB_TMP/xbb-build
-
 XBB_DOWNLOAD="$XBB_TMP/download"
-XBB_BOOTSTRAP="$XBB_TMP/bootstrap"
+
+XBB_BOOTSTRAP="/opt/xbb-bootstrap"
 XBB_BOOTSTRAP_BUILD="$XBB_TMP/bootstrap-build"
+
+# This is the final location of the tools.
+XBB="/opt/xbb"
+XBB_BUILD="$XBB_TMP/xbb-build"
 
 MAKE_CONCURRENCY=2
 
