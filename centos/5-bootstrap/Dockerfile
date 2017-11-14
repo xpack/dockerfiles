@@ -1,0 +1,10 @@
+FROM ilegeul/centos:5-develop
+MAINTAINER Liviu Ionescu <ilg@livius.net>
+WORKDIR /root
+
+ADD image /xbb-input
+RUN \
+bash -x /xbb-input/build.sh
+
+CMD ["/bin/bash"]
+
