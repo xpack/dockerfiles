@@ -25,6 +25,12 @@ Since access to the current download sites requires https, and the old `curl` do
 
 This step installs the newly created tools in `/opt/xbb-bootstrap`, using several temporary folders.
 
+To use the bootstrap tools, add `/opt/xpp-bootstrap/bin` to the path:
+
+```console
+$ PATH=/opt/xbb-bootstrap/bin:$PATH
+```
+
 ### Developer
 
 To create the Docker image, use:
