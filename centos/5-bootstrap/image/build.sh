@@ -420,7 +420,7 @@ function xbb_activate()
   export LIBRARY_PATH="${BB_}/lib"
   export PKG_CONFIG_PATH="${BB_}/lib/pkgconfig":/usr/lib/pkgconfig
   export CPPFLAGS=-I"${BB_}/include"
-  export LDPATHFLAGS=-L"${BB_}/lib" -Wl,-rpath,"${BB_}/lib"
+  export LDPATHFLAGS="-L\"${BB_}/lib\" -Wl,-rpath,\"${BB_}/lib\""
   export LDFLAGS="${LDPATHFLAGS}"
   export LD_LIBRARY_PATH="${BB_}/lib"
 }
