@@ -255,8 +255,10 @@ XBB_ISL_URL="http://isl.gforge.inria.fr/${XBB_ISL_ARCHIVE}"
 # Texinfo version 4.8 or later is required for make pdf.
 # TeX (any working version)
 
+# XBB_ZLIB_VERSION=1.2.11
+
 # -----------------------------------------------------------------------------
-# And finally build the binutils.
+# And finally build the binutils and gcc.
 
 # https://ftp.gnu.org/gnu/binutils/
 # 2017-07-24
@@ -265,11 +267,19 @@ XBB_BINUTILS_FOLDER="binutils-${XBB_BINUTILS_VERSION}"
 XBB_BINUTILS_ARCHIVE="${XBB_BINUTILS_FOLDER}.tar.xz"
 XBB_BINUTILS_URL="https://ftp.gnu.org/gnu/binutils/${XBB_BINUTILS_ARCHIVE}"
 
+# https://gcc.gnu.org
+# https://gcc.gnu.org/wiki/InstallingGCC
+
+# https://ftp.gnu.org/gnu/gcc/
+
+XBB_GCC_VERSION="7.2.0"
+XBB_GCC_FOLDER="gcc-${XBB_GCC_VERSION}"
+XBB_GCC_ARCHIVE="${XBB_GCC_FOLDER}.tar.xz"
+XBB_GCC_URL="https://ftp.gnu.org/gnu/gcc/gcc-${XBB_GCC_VERSION}/${XBB_GCC_ARCHIVE}"
+
 # -----------------------------------------------------------------------------
 
-# XBB_CCACHE_VERSION=3.3.3
-XBB_GCC_LIBSTDCXX_VERSION=4.8.2
-XBB_ZLIB_VERSION=1.2.11
+# SKIP_BOOTSTRAP=true
 
 # SKIP_BOOTSTRAP_OPENSSL=true
 # SKIP_BOOTSTRAP_CURL=true
@@ -299,7 +309,9 @@ XBB_ZLIB_VERSION=1.2.11
 # SKIP_BOOTSTRAP_ISL=true
 
 # SKIP_BOOTSTRAP_BINUTILS=true
+# SKIP_BOOTSTRAP_GCC=true
 
+# -----------------------------------------------------------------------------
 
 # Defaults
 
@@ -335,6 +347,8 @@ SKIP_BOOTSTRAP_ISL=${SKIP_BOOTSTRAP_ISL:-$SKIP_BOOTSTRAP}
 
 SKIP_BOOTSTRAP_BINUTILS=${SKIP_BOOTSTRAP_BINUTILS:-$SKIP_BOOTSTRAP}
 
+SKIP_BOOTSTRAP_GCC=${SKIP_BOOTSTRAP_GCC:-$SKIP_BOOTSTRAP}
+
 # -----------------------------------------------------------------------------
 
 function extract()
@@ -345,10 +359,10 @@ function extract()
     tar xjf "${ARCHIVE_NAME}"
   elif [[ "${ARCHIVE_NAME}" =~ '\.xz$' ]]; then
     (
-			# For xz, use the bootstrap tar
+      # For xz, use the bootstrap tar
       PATH="${XBB_BOOTSTRAP}/bin":${PATH}
       tar xJf "${ARCHIVE_NAME}"
-		)
+    )
   else
     tar xzf "${ARCHIVE_NAME}"
   fi
@@ -374,27 +388,6 @@ function eval_bool()
   [[ "${VAL}" = 1 || "${VAL}" = true || "${VAL}" = yes || "${VAL}" = y ]]
 }
 
-# $1=path ($XBB_BOOTSTRAP)
-function xbb_activate()
-{
-	local BB_
-	if [ $# -gt 0 ]
-	then
-		BB_=$1
-	else
-		BB_=${XBB}
-	fi
-  export PATH=${BB_}/bin:${PATH}
-	export C_INCLUDE_PATH=${BB_}/include
-	export CPLUS_INCLUDE_PATH=${BB_}/include
-	export LIBRARY_PATH=${BB_}/lib
-	export PKG_CONFIG_PATH=${BB_}/lib/pkgconfig:/usr/lib/pkgconfig
-	export CPPFLAGS=-I{$BB_}/include
-	export LDPATHFLAGS="-L${BB_}/lib -Wl,-rpath,${BB_}/lib"
-	export LDFLAGS="${LDPATHFLAGS}"
-	export LD_LIBRARY_PATH=${BB_}/lib
-}
-
 # -----------------------------------------------------------------------------
 
 mkdir -p "${XBB}"
@@ -406,472 +399,567 @@ mkdir -p "${XBB_BUILD}"
 mkdir -p "${XBB_BOOTSTRAP}"
 mkdir -p "${XBB_BOOTSTRAP_BUILD}"
 
+# -----------------------------------------------------------------------------
+
+# Note: __EOF__ is quoted to prevent substitutions here.
+cat <<'__EOF__' >> "${XBB_BOOTSTRAP}/xbb.sh"
+
+# $1=path ($XBB_BOOTSTRAP)
+function xbb_activate()
+{
+  local BB_
+  if [ $# -gt 0 ]
+  then
+    BB_=$1
+  else
+    BB_="${XBB_BOOTSTRAP}"
+  fi
+  export PATH="${BB_}/bin":${PATH}
+  export C_INCLUDE_PATH="${BB_}/include"
+  export CPLUS_INCLUDE_PATH="${BB_}/include"
+  export LIBRARY_PATH="${BB_}/lib"
+  export PKG_CONFIG_PATH="${BB_}/lib/pkgconfig":/usr/lib/pkgconfig
+  export CPPFLAGS=-I"${BB_}/include"
+  export LDPATHFLAGS=-L"${BB_}/lib" -Wl,-rpath,"${BB_}/lib"
+  export LDFLAGS="${LDPATHFLAGS}"
+  export LD_LIBRARY_PATH="${BB_}/lib"
+}
+
+__EOF__
+# The above marker must start in the first column.
+
+source "${XBB_BOOTSTRAP}/xbb.sh"
+
+# -----------------------------------------------------------------------------
+# WARNING: the order is important, since some of the builds depend
+# on previous ones.
+# For extra safety, the ${XBB_BOOTSTRAP} is not permanently in PATH,
+# it is added explicitly with xbb_activate in sub-shells.
+# Generally build only the static versions of the libraries.
+# (the exception are libcrypto.so libcurl.so libssl.so)
+
 if ! eval_bool "${SKIP_BOOTSTRAP_OPENSSL}"
 then
-  echo "Building bootstrap OpenSSL ${XBB_OPENSSL_VERSION}..."
+  echo "Building bootstrap openssl ${XBB_OPENSSL_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
   extract "${XBB_INPUT}/${XBB_OPENSSL_ARCHIVE}" 
 
   pushd "${XBB_OPENSSL_FOLDER}"
   (
-    xbb_activate "${XBB_BOOTSTRAP}"
+    xbb_activate
 
     ./config --prefix="${XBB_BOOTSTRAP}" --openssldir="${XBB_BOOTSTRAP}/openssl" \
-			threads zlib shared
+      threads zlib shared
     make
     make install_sw
 
     strip --strip-all "${XBB_BOOTSTRAP}/bin/openssl"
     strip --strip-debug "${XBB_BOOTSTRAP}/lib/libssl.so" \
-			"${XBB_BOOTSTRAP}/lib/libcrypto.so"
+      "${XBB_BOOTSTRAP}/lib/libcrypto.so"
     rm -f "${XBB_BOOTSTRAP}/lib/libssl.a" "${XBB_BOOTSTRAP}/lib/libcrypto.a"
     ln -s /etc/pki/tls/certs/ca-bundle.crt "${XBB_BOOTSTRAP}/openssl/cert.pem"
   )
   if [[ "$?" != 0 ]]; then false; fi
-	popd
+  popd
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_CURL}"
 then
-	echo "Building bootstrap curl ${XBB_CURL_VERSION}..."
+  echo "Building bootstrap curl ${XBB_CURL_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	extract "${XBB_INPUT}/${XBB_CURL_ARCHIVE}" 
+  extract "${XBB_INPUT}/${XBB_CURL_ARCHIVE}" 
 
   pushd "${XBB_CURL_FOLDER}"
-	(
-    xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
     ./buildconf
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-static --disable-debug \
-			--enable-optimize --disable-manual --with-ssl \
-			--with-ca-bundle=/etc/pki/tls/certs/ca-bundle.crt
-		make -j${MAKE_CONCURRENCY}
-		make install
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-static --disable-debug \
+      --enable-optimize --disable-manual --with-ssl \
+      --with-ca-bundle=/etc/pki/tls/certs/ca-bundle.crt
+    make -j${MAKE_CONCURRENCY}
+    make install
 
-		strip --strip-all "${XBB_BOOTSTRAP}/bin/curl"
-		strip --strip-debug "${XBB_BOOTSTRAP}/lib/libcurl.so"
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    strip --strip-all "${XBB_BOOTSTRAP}/bin/curl"
+    strip --strip-debug "${XBB_BOOTSTRAP}/lib/libcurl.so"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 
-	hash -r
+  hash -r
 fi
 
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_BOOTSTRAP_XZ}"
 then
-	echo "Building bootstrap xz ${XBB_XZ_VERSION}..."
+  echo "Building bootstrap xz ${XBB_XZ_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_XZ_ARCHIVE}" "${XBB_XZ_URL}"
+  download_and_extract "${XBB_XZ_ARCHIVE}" "${XBB_XZ_URL}"
 
   pushd "${XBB_XZ_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 # Requires xz
 if ! eval_bool "${SKIP_BOOTSTRAP_TAR}"
 then
-	echo "Building bootstrap tar ${XBB_TAR_VERSION}..."
+  echo "Building bootstrap tar ${XBB_TAR_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_TAR_ARCHIVE}" "${XBB_TAR_URL}"
+  download_and_extract "${XBB_TAR_ARCHIVE}" "${XBB_TAR_URL}"
 
   pushd "${XBB_TAR_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		export FORCE_UNSAFE_CONFIGURE=1
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    export FORCE_UNSAFE_CONFIGURE=1
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_BOOTSTRAP_M4}"
 then
-	echo "Building bootstrap m4 ${XBB_M4_VERSION}..."
+  echo "Building bootstrap m4 ${XBB_M4_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_M4_ARCHIVE}" "${XBB_M4_URL}"
+  download_and_extract "${XBB_M4_ARCHIVE}" "${XBB_M4_URL}"
 
   pushd "${XBB_M4_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_GAWK}"
 then
-	echo "Building bootstrap gawk ${XBB_GAWK_VERSION}..."
+  echo "Building bootstrap gawk ${XBB_GAWK_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_GAWK_ARCHIVE}" "${XBB_GAWK_URL}"
+  download_and_extract "${XBB_GAWK_ARCHIVE}" "${XBB_GAWK_URL}"
 
   pushd "${XBB_GAWK_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
-
 if ! eval_bool "${SKIP_BOOTSTRAP_AUTOCONF}"; then
-	echo "Building bootstrap autoconf ${XBB_AUTOCONF_VERSION}..."
+  echo "Building bootstrap autoconf ${XBB_AUTOCONF_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_AUTOCONF_ARCHIVE}" "${XBB_AUTOCONF_URL}"
+  download_and_extract "${XBB_AUTOCONF_ARCHIVE}" "${XBB_AUTOCONF_URL}"
 
   pushd "${XBB_AUTOCONF_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_AUTOMAKE}"; then
-	echo "Building bootstrap automake ${XBB_AUTOMAKE_VERSION}..."
+  echo "Building bootstrap automake ${XBB_AUTOMAKE_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_AUTOMAKE_ARCHIVE}" "${XBB_AUTOMAKE_URL}"
+  download_and_extract "${XBB_AUTOMAKE_ARCHIVE}" "${XBB_AUTOMAKE_URL}"
 
   pushd "${XBB_AUTOMAKE_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_LIBTOOL}"; then
-	echo "Building bootstrap libtool ${XBB_LIBTOOL_VERSION}..."
+  echo "Building bootstrap libtool ${XBB_LIBTOOL_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_LIBTOOL_ARCHIVE}" "${XBB_LIBTOOL_URL}"
+  download_and_extract "${XBB_LIBTOOL_ARCHIVE}" "${XBB_LIBTOOL_URL}"
 
   pushd "${XBB_LIBTOOL_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_GETTEXT}"; then
-	echo "Building bootstrap gettext ${XBB_GETTEXT_VERSION}..."
+  echo "Building bootstrap gettext ${XBB_GETTEXT_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_GETTEXT_ARCHIVE}" "${XBB_GETTEXT_URL}"
+  download_and_extract "${XBB_GETTEXT_ARCHIVE}" "${XBB_GETTEXT_URL}"
 
   pushd "${XBB_GETTEXT_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_PATCH}"; then
-	echo "Building bootstrap patch ${XBB_PATCH_VERSION}..."
+  echo "Building bootstrap patch ${XBB_PATCH_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_PATCH_ARCHIVE}" "${XBB_PATCH_URL}"
+  download_and_extract "${XBB_PATCH_ARCHIVE}" "${XBB_PATCH_URL}"
 
   pushd "${XBB_PATCH_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_DIFFUTILS}"; then
-	echo "Building bootstrap diffutils ${XBB_DIFFUTILS_VERSION}..."
+  echo "Building bootstrap diffutils ${XBB_DIFFUTILS_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_DIFFUTILS_ARCHIVE}" "${XBB_DIFFUTILS_URL}"
+  download_and_extract "${XBB_DIFFUTILS_ARCHIVE}" "${XBB_DIFFUTILS_URL}"
 
   pushd "${XBB_DIFFUTILS_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_BISON}"; then
-	echo "Building bootstrap bison ${XBB_BISON_VERSION}..."
+  echo "Building bootstrap bison ${XBB_BISON_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_BISON_ARCHIVE}" "${XBB_BISON_URL}"
+  download_and_extract "${XBB_BISON_ARCHIVE}" "${XBB_BISON_URL}"
 
   pushd "${XBB_BISON_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_BOOTSTRAP_PKG_CONFIG}"; then
-	echo "Building bootstrap pkg-config ${XBB_PKG_CONFIG_VERSION}..."
+  echo "Building bootstrap pkg-config ${XBB_PKG_CONFIG_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_PKG_CONFIG_ARCHIVE}" "${XBB_PKG_CONFIG_URL}"
+  download_and_extract "${XBB_PKG_CONFIG_ARCHIVE}" "${XBB_PKG_CONFIG_URL}"
 
   pushd "${XBB_PKG_CONFIG_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --with-internal-glib
-		rm -f "${XBB_BOOTSTRAP}/bin"/*pkg-config
-		make -j${MAKE_CONCURRENCY} install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --with-internal-glib
+    rm -f "${XBB_BOOTSTRAP}/bin"/*pkg-config
+    make -j${MAKE_CONCURRENCY} install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 # Requires gettext
 if ! eval_bool "${SKIP_BOOTSTRAP_FLEX}"; then
-	echo "Building bootstrap flex ${XBB_FLEX_VERSION}..."
+  echo "Building bootstrap flex ${XBB_FLEX_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_FLEX_ARCHIVE}" "${XBB_FLEX_URL}"
+  download_and_extract "${XBB_FLEX_ARCHIVE}" "${XBB_FLEX_URL}"
 
   pushd "${XBB_FLEX_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./autogen.sh
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./autogen.sh
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_PERL}"; then
-	echo "Building bootstrap perl ${XBB_PERL_VERSION}..."
+  echo "Building bootstrap perl ${XBB_PERL_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_PERL_ARCHIVE}" "${XBB_PERL_URL}"
+  download_and_extract "${XBB_PERL_ARCHIVE}" "${XBB_PERL_URL}"
 
   pushd "${XBB_PERL_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./Configure -des -Dprefix="${XBB_BOOTSTRAP}"
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
+    ./Configure -des -Dprefix="${XBB_BOOTSTRAP}"
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
 
-		curl -L http://cpanmin.us | perl - App::cpanminus
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    curl -L http://cpanmin.us | perl - App::cpanminus
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_BOOTSTRAP_CMAKE}"; then
-	echo "Installing CMake ${XBB_CMAKE_VERSION}"
+  echo "Installing bootstrap cmake ${XBB_CMAKE_VERSION}"
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_CMAKE_ARCHIVE}" "${XBB_CMAKE_URL}"
+  download_and_extract "${XBB_CMAKE_ARCHIVE}" "${XBB_CMAKE_URL}"
 
   pushd "${XBB_CMAKE_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --no-qt-gui --parallel=${MAKE_CONCURRENCY}
-		make -j${MAKE_CONCURRENCY}
-		make install
-		strip --strip-all ${XBB_BOOTSTRAP}/bin/cmake
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --no-qt-gui --parallel=${MAKE_CONCURRENCY}
+    make -j${MAKE_CONCURRENCY}
+    make install
+    strip --strip-all ${XBB_BOOTSTRAP}/bin/cmake
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_PYTHON}"; then
-	echo "Installing Python ${XBB_PYTHON_VERSION}"
+  echo "Installing bootstrap python ${XBB_PYTHON_VERSION}"
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_PYTHON_ARCHIVE}" "${XBB_PYTHON_URL}"
+  download_and_extract "${XBB_PYTHON_ARCHIVE}" "${XBB_PYTHON_URL}"
 
   pushd "${XBB_PYTHON_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}"
-		make -j${MAKE_CONCURRENCY} install
-		strip --strip-all "${XBB_BOOTSTRAP}/bin/python"
-		strip --strip-debug "${XBB_BOOTSTRAP}"/lib/python*/lib-dynload/*.so
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}"
+    make -j${MAKE_CONCURRENCY} install
+    strip --strip-all "${XBB_BOOTSTRAP}/bin/python"
+    strip --strip-debug "${XBB_BOOTSTRAP}"/lib/python*/lib-dynload/*.so
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 
-	hash -r
+  hash -r
  
   (
-		xbb_activate "${XBB_BOOTSTRAP}"
+    xbb_activate
 
-		# Install setuptools and pip
-		echo "Installing setuptools and pip..."
-		curl -OL --fail https://bootstrap.pypa.io/ez_setup.py
-		python ez_setup.py
-		rm -f ez_setup.py
-		easy_install pip
-		rm -f /setuptools*.zip
-	)
+    # Install setuptools and pip
+    echo "Installing setuptools and pip..."
+    curl -OL --fail https://bootstrap.pypa.io/ez_setup.py
+    python ez_setup.py
+    rm -f ez_setup.py
+    easy_install pip
+    rm -f /setuptools*.zip
+  )
 fi
 
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_BOOTSTRAP_GMP}"; then
-	echo "Building bootstrap gmp ${XBB_GMP_VERSION}..."
+  echo "Building bootstrap gmp ${XBB_GMP_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_GMP_ARCHIVE}" "${XBB_GMP_URL}"
+  download_and_extract "${XBB_GMP_ARCHIVE}" "${XBB_GMP_URL}"
 
   pushd "${XBB_GMP_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_MPFR}"; then
-	echo "Building bootstrap mpfr ${XBB_MPFR_VERSION}..."
+  echo "Building bootstrap mpfr ${XBB_MPFR_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_MPFR_ARCHIVE}" "${XBB_MPFR_URL}"
+  download_and_extract "${XBB_MPFR_ARCHIVE}" "${XBB_MPFR_URL}"
 
   pushd "${XBB_MPFR_FOLDER}"
-	(
-		xbb_activate "$XBB_BOOTSTRAP"
+  (
+    xbb_activate "$XBB_BOOTSTRAP"
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_MPC}"; then
-	echo "Building bootstrap mpc ${XBB_MPC_VERSION}..."
+  echo "Building bootstrap mpc ${XBB_MPC_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_MPC_ARCHIVE}" "${XBB_MPC_URL}"
+  download_and_extract "${XBB_MPC_ARCHIVE}" "${XBB_MPC_URL}"
 
   pushd "${XBB_MPC_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_ISL}"; then
-	echo "Building bootstrap isl ${XBB_ISL_VERSION}..."
+  echo "Building bootstrap isl ${XBB_ISL_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_ISL_ARCHIVE}" "${XBB_ISL_URL}"
+  download_and_extract "${XBB_ISL_ARCHIVE}" "${XBB_ISL_URL}"
 
   pushd "$XBB_ISL_FOLDER"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 if ! eval_bool "${SKIP_BOOTSTRAP_BINUTILS}"; then
-	echo "Building bootstrap binutils ${XBB_BINUTILS_VERSION}..."
+  echo "Building bootstrap binutils ${XBB_BINUTILS_VERSION}..."
   cd "${XBB_BOOTSTRAP_BUILD}"
 
-	download_and_extract "${XBB_BINUTILS_ARCHIVE}" "${XBB_BINUTILS_URL}"
+  download_and_extract "${XBB_BINUTILS_ARCHIVE}" "${XBB_BINUTILS_URL}"
 
   pushd "${XBB_BINUTILS_FOLDER}"
-	(
-		xbb_activate "${XBB_BOOTSTRAP}"
+  (
+    xbb_activate
 
-		./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
-		make -j${MAKE_CONCURRENCY}
-		make install-strip
-	)
-	if [[ "$?" != 0 ]]; then false; fi
-	popd
+    ./configure --prefix="${XBB_BOOTSTRAP}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+fi
+
+# -----------------------------------------------------------------------------
+
+if ! eval_bool "${SKIP_BOOTSTRAP_GCC}"
+then
+  echo "Building bootstrap gcc ${XBB_GCC_VERSION}..."
+  cd "${XBB_BOOTSTRAP_BUILD}"
+
+  download_and_extract "${XBB_GCC_ARCHIVE}" "${XBB_GCC_URL}"
+
+  mkdir -p "${XBB_GCC_FOLDER}-build"
+  pushd "${XBB_GCC_FOLDER}-build"
+  (
+    xbb_activate
+
+    "../${XBB_GCC_FOLDER}/configure" --prefix="${XBB_BOOTSTRAP}" \
+      --enable-languages=c,c++ \
+      --disable-multilib \
+      --disable-shared
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 # -----------------------------------------------------------------------------
