@@ -28,7 +28,7 @@ XBB_TMP=/tmp/xbb
 XBB_BOOTSTRAP="/opt/xbb-bootstrap"
 XBB_BOOTSTRAP_BUILD="${XBB_TMP}/bootstrap-build"
 
-# This is the final location of the tools.
+# This is the final location of the tools. Not yet used.
 XBB="/opt/xbb"
 XBB_BUILD="${XBB_TMP}/xbb-build"
 
@@ -951,10 +951,10 @@ then
   (
     xbb_activate
 
+    # --disable-shared failed with errors in libstdc++-v3
     "../${XBB_GCC_FOLDER}/configure" --prefix="${XBB_BOOTSTRAP}" \
       --enable-languages=c,c++ \
-      --disable-multilib \
-      --disable-shared
+      --disable-multilib
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -966,6 +966,5 @@ fi
 
 # rm -rf "$XBB_DOWNLOAD"
 rm -rf "$XBB_BOOTSTRAP_BUILD"
-rm -rf "$XBB_BUILD"
 rm -rf "$XBB_TMP"
 rm -rf "$XBB_INPUT"
