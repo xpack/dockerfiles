@@ -19,7 +19,17 @@ IFS=$'\n\t'
 
 # -----------------------------------------------------------------------------
 
-# Inspired by Holy Build Box build script.
+# Script to build a Docker image with a bootstrap system, used to later build  
+# the final xPack Build Box (xbb).
+#
+# To finally get access to the very latest versions it is required to do it 
+# in two steps, since the orginal CentOS 5 is too old to compile some of
+# the modern sources. So, in the first step are compiled the most recent
+# versions allowed by CentOS 5; being based on GCC 7.2, they shold be 
+# enough for a few years to come. With them, in the second step are 
+# compiled the latest versions.
+
+# Credits: Inspired by 'Holy Build Box'.
 
 XBB_INPUT="/xbb-input"
 XBB_DOWNLOAD="/tmp/xbb-download"
@@ -34,7 +44,6 @@ MAKE_CONCURRENCY=2
 
 mkdir -p "${XBB_TMP}"
 mkdir -p "${XBB_DOWNLOAD}"
-mkdir -p "${XBB_BUILD}"
 
 mkdir -p "${XBB}"
 mkdir -p "${XBB_BUILD}"
@@ -46,13 +55,25 @@ cat <<'__EOF__' >> "${XBB}/xbb.sh"
 
 function xbb_activate_param()
 {
-  local PREFIX_="$1"
-  local EXTRA_CFLAGS="$2"
-  local EXTRA_LDFLAGS="$3"
-  local EXTRA_LDPATHFLAGS="$4"
-  local EXTRA_STATICLIB_CFLAGS="$5"
-  local EXTRA_SHLIB_CFLAGS="$6"
-  local EXTRA_SHLIB_CFLAGS="$7"
+  PREFIX_=${PREFIX_:-${XBB}}
+
+  # Do not include -I... here, use CPPFLAGS.
+  EXTRA_CFLAGS_=${EXTRA_CFLAGS_:-""}
+  EXTRA_CXXFLAGS_=${EXTRA_CXXFLAGS_:-${EXTRA_CFLAGS_}}
+
+  EXTRA_LDFLAGS_=${EXTRA_LDFLAGS_:-""}
+
+  # Do not include -I... here, use CPPFLAGS.
+  EXTRA_STATICLIB_CFLAGS_=${EXTRA_STATICLIB_CFLAGS_:-""}
+  EXTRA_STATICLIB_CXXFLAGS_=${EXTRA_STATICLIB_CXXFLAGS_:-${EXTRA_STATICLIB_CFLAGS_}}
+
+  # Do not include -I... here, use CPPFLAGS.
+  EXTRA_SHLIB_CFLAGS_=${EXTRA_SHLIB_CFLAGS_:-""}
+  EXTRA_SHLIB_CXXFLAGS_=${EXTRA_SHLIB_CXXFLAGS_:-${EXTRA_SHLIB_CFLAGS_}}
+  
+  EXTRA_SHLIB_LDFLAGS_=${EXTRA_SHLIB_LDFLAGS_:-""}
+
+  EXTRA_LDPATHFLAGS_=${EXTRA_LDPATHFLAGS_:-""}
 
   export PATH="${PREFIX_}/bin":${PATH}
   export C_INCLUDE_PATH="${PREFIX_}/include"
@@ -62,41 +83,40 @@ function xbb_activate_param()
   export LD_LIBRARY_PATH="${PREFIX_}/lib"
 
   export CPPFLAGS=-I"${PREFIX_}/include"
-  export LDPATHFLAGS="-L\"${PREFIX_}/lib\" ${EXTRA_LDPATHFLAGS}"
+  export LDPATHFLAGS="-L\"${PREFIX_}/lib\" ${EXTRA_LDPATHFLAGS_}"
 
   # Do not include -I... here, use CPPFLAGS.
-  local MINIMAL_CFLAGS="-g -O2"
+  local MINIMAL_CFLAGS_="-g -O2"
 
-  export CFLAGS="${MINIMAL_CFLAGS} ${EXTRA_CFLAGS}"
-	export CXXFLAGS="${MINIMAL_CFLAGS} ${EXTRA_CFLAGS}"
-  export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS}"
+  export CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CFLAGS_}"
+	export CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CXXFLAGS_}"
+  export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
-	export STATICLIB_CFLAGS="${MINIMAL_CFLAGS} ${EXTRA_STATICLIB_CFLAGS}"
-	export STATICLIB_CXXFLAGS="${MINIMAL_CFLAGS} ${EXTRA_STATICLIB_CFLAGS}"
+	export STATICLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
+	export STATICLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
+
+	export SHLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
+	export SHLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
+  export SHLIB_LDFLAGS="${LDPATHFLAGS} ${EXTRA_SHLIB_LDFLAGS_}"
 }
 
 xbb_activate_bootstrap()
 {
-  xbb_activate_param \
-    "/opt/xbb-bootstrap" \
-    "" \
-    "" \
-    "-Wl,-rpath,\"/opt/xbb-bootstrap/lib\"" \
-    "" \
-    "" \
-    ""
+  PREFIX_="${XBB}" 
+  EXTRA_LDFLAGS_="-Wl,-rpath,\"${XBB}/lib\"" 
+  xbb_activate_param
 }
 
 xbb_activate_bootstrap_static()
 {
-  xbb_activate_param \
-    "/opt/xbb-bootstrap" \
-    "-ffunction-sections -fdata-sections -fvisibility=hidden" \
-    "-static-libstdc++ -Wl,--gc-sections -pie -Wl,-z,relro" \
-    "" \
-    "-ffunction-sections -fdata-sections -fvisibility=hidden -fstack-protector -D_FORTIFY_SOURCE=2 -fPIE" \
-    "" \
-    ""
+  PREFIX_="${XBB}"
+  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections "
+  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections "
+  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections -Wl,-rpath -Wl,\"${XBB}/lib\""
+  EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_STATICLIB_CXXFLAGS_="-ffunction-sections -fdata-sections"
+
+  xbb_activate_param
 }
 
 __EOF__
@@ -105,8 +125,125 @@ __EOF__
 source "${XBB}/xbb.sh"
 
 # -----------------------------------------------------------------------------
+
+# SKIP_ALL=true
+
+# SKIP_ZLIB=true
+# SKIP_OPENSSL=true
+# SKIP_CURL=true
+
+# SKIP_XZ=true
+# SKIP_TAR=true
+
+# SKIP_M4=true
+# SKIP_GAWK=true
+# SKIP_AUTOCONF=true
+# SKIP_AUTOMAKE=true
+# SKIP_LIBTOOL=true
+# SKIP_GETTEXT=true
+# SKIP_PATCH=true
+# SKIP_DIFUTILS=true
+# SKIP_BISON=true
+
+# SKIP_PKG_CONFIG=true
+# SKIP_FLEX=true
+# SKIP_PERL=true
+
+# SKIP_CMAKE=true
+# SKIP_PYTHON=true
+
+# SKIP_GMP=true
+# SKIP_MPFR=true
+# SKIP_MPC=true
+# SKIP_ISL=true
+
+# SKIP_BINUTILS=true
+# SKIP_GCC=true
+
+# -----------------------------------------------------------------------------
+
+# Defaults
+
+SKIP_ALL=${SKIP_ALL:-false}
+
+SKIP_ZLIB=${SKIP_ZLIBL:-$SKIP_ALL}
+SKIP_OPENSSL=${SKIP_OPENSSL:-$SKIP_ALL}
+SKIP_CURL=${SKIP_CURL:-$SKIP_ALL}
+
+SKIP_XZ=${SKIP_XZ:-$SKIP_ALL}
+SKIP_TAR=${SKIP_TAR:-$SKIP_ALL}
+
+SKIP_M4=${SKIP_M4:-$SKIP_ALL}
+SKIP_GAWK=${SKIP_GAWK:-$SKIP_ALL}
+SKIP_AUTOCONF=${SKIP_AUTOCONF:-$SKIP_ALL}
+SKIP_AUTOMAKE=${SKIP_AUTOMAKE:-$SKIP_ALL}
+SKIP_LIBTOOL=${SKIP_LIBTOOL:-$SKIP_ALL}
+SKIP_GETTEXT=${SKIP_GETTEXT:-$SKIP_ALL}
+SKIP_PATCH=${SKIP_PATCH:-$SKIP_ALL}
+SKIP_DIFFUTILS=${SKIP_DIFFUTILS:-$SKIP_ALL}
+SKIP_BISON=${SKIP_BISON:-$SKIP_ALL}
+
+SKIP_PKG_CONFIG=${SKIP_PKG_CONFIG:-$SKIP_ALL}
+SKIP_FLEX=${SKIP_FLEX:-$SKIP_ALL}
+SKIP_PERL=${SKIP_PERL:-$SKIP_ALL}
+
+SKIP_CMAKE=${SKIP_CMAKE:-$SKIP_ALL}
+SKIP_PYTHON=${SKIP_PYTHON:-$SKIP_ALL}
+
+SKIP_GMP=${SKIP_GMP:-$SKIP_ALL}
+SKIP_MPFR=${SKIP_MPFR:-$SKIP_ALL}
+SKIP_MPC=${SKIP_MPC:-$SKIP_ALL}
+SKIP_ISL=${SKIP_ISL:-$SKIP_ALL}
+
+SKIP_BINUTILS=${SKIP_BINUTILS:-$SKIP_ALL}
+
+SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
+
+# -----------------------------------------------------------------------------
+
+# SKIP_ZLIB=false
+# SKIP_OPENSSL=false
+# SKIP_CURL=false
+
+# SKIP_XZ=false
+# SKIP_TAR=false
+
+# SKIP_M4=false
+# SKIP_GAWK=false
+# SKIP_AUTOCONF=false
+# SKIP_AUTOMAKE=false
+# SKIP_LIBTOOL=false
+# SKIP_GETTEXT=false
+# SKIP_PATCH=false
+# SKIP_DIFUTILS=false
+# SKIP_BISON=false
+
+# SKIP_PKG_CONFIG=false
+# SKIP_FLEX=false
+# SKIP_PERL=false
+
+# SKIP_CMAKE=false
+# SKIP_PYTHON=false
+
+# SKIP_GMP=false
+# SKIP_MPFR=false
+# SKIP_MPC=false
+# SKIP_ISL=false
+
+# SKIP_BINUTILS=false
+# SKIP_GCC=false
+
+# -----------------------------------------------------------------------------
 # The first step is to build a curl, that understands https.
 # This requires openssl.
+
+# http://zlib.net
+# http://zlib.net/fossils/
+# 2017-01-15
+XBB_ZLIB_VERSION="1.2.11"
+XBB_ZLIB_FOLDER="zlib-${XBB_ZLIB_VERSION}"
+XBB_ZLIB_ARCHIVE="${XBB_ZLIB_FOLDER}.tar.gz"
+XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
 
 # https://www.openssl.org
 # https://www.openssl.org/source/
@@ -119,14 +256,6 @@ XBB_OPENSSL_VERSION="1.0.2m"
 XBB_OPENSSL_FOLDER="openssl-${XBB_OPENSSL_VERSION}"
 XBB_OPENSSL_ARCHIVE="${XBB_OPENSSL_FOLDER}.tar.gz"
 # No URL; passed via $XBB_INPUT, CentOS 5 curl cannot access https.
-
-# http://zlib.net
-# http://zlib.net/fossils/
-# 2017-01-15
-XBB_ZLIB_VERSION="1.2.11"
-XBB_ZLIB_FOLDER="zlib-${XBB_ZLIB_VERSION}"
-XBB_ZLIB_ARCHIVE="${XBB_ZLIB_FOLDER}.tar.gz"
-XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
 
 # https://curl.haxx.se
 # https://curl.haxx.se/download/
@@ -363,115 +492,6 @@ XBB_GCC_URL="https://ftp.gnu.org/gnu/gcc/gcc-${XBB_GCC_VERSION}/${XBB_GCC_ARCHIV
 
 # -----------------------------------------------------------------------------
 
-# SKIP_ALL=true
-
-# SKIP_ZLIB=true
-# SKIP_OPENSSL=true
-# SKIP_CURL=true
-
-# SKIP_XZ=true
-# SKIP_TAR=true
-
-# SKIP_M4=true
-# SKIP_GAWK=true
-# SKIP_AUTOCONF=true
-# SKIP_AUTOMAKE=true
-# SKIP_LIBTOOL=true
-# SKIP_GETTEXT=true
-# SKIP_PATCH=true
-# SKIP_DIFUTILS=true
-# SKIP_BISON=true
-
-# SKIP_PKG_CONFIG=true
-# SKIP_FLEX=true
-# SKIP_PERL=true
-
-# SKIP_CMAKE=true
-# SKIP_PYTHON=true
-
-# SKIP_GMP=true
-# SKIP_MPFR=true
-# SKIP_MPC=true
-# SKIP_ISL=true
-
-# SKIP_BINUTILS=true
-# SKIP_GCC=true
-
-# -----------------------------------------------------------------------------
-
-# Defaults
-
-SKIP_ALL=${SKIP_ALL:-false}
-
-SKIP_ZLIB=${SKIP_ZLIBL:-$SKIP_ALL}
-SKIP_OPENSSL=${SKIP_OPENSSL:-$SKIP_ALL}
-SKIP_CURL=${SKIP_CURL:-$SKIP_ALL}
-
-SKIP_XZ=${SKIP_XZ:-$SKIP_ALL}
-SKIP_TAR=${SKIP_TAR:-$SKIP_ALL}
-
-SKIP_M4=${SKIP_M4:-$SKIP_ALL}
-SKIP_GAWK=${SKIP_GAWK:-$SKIP_ALL}
-SKIP_AUTOCONF=${SKIP_AUTOCONF:-$SKIP_ALL}
-SKIP_AUTOMAKE=${SKIP_AUTOMAKE:-$SKIP_ALL}
-SKIP_LIBTOOL=${SKIP_LIBTOOL:-$SKIP_ALL}
-SKIP_GETTEXT=${SKIP_GETTEXT:-$SKIP_ALL}
-SKIP_PATCH=${SKIP_PATCH:-$SKIP_ALL}
-SKIP_DIFFUTILS=${SKIP_DIFFUTILS:-$SKIP_ALL}
-SKIP_BISON=${SKIP_BISON:-$SKIP_ALL}
-
-SKIP_PKG_CONFIG=${SKIP_PKG_CONFIG:-$SKIP_ALL}
-SKIP_FLEX=${SKIP_FLEX:-$SKIP_ALL}
-SKIP_PERL=${SKIP_PERL:-$SKIP_ALL}
-
-SKIP_CMAKE=${SKIP_CMAKE:-$SKIP_ALL}
-SKIP_PYTHON=${SKIP_PYTHON:-$SKIP_ALL}
-
-SKIP_GMP=${SKIP_GMP:-$SKIP_ALL}
-SKIP_MPFR=${SKIP_MPFR:-$SKIP_ALL}
-SKIP_MPC=${SKIP_MPC:-$SKIP_ALL}
-SKIP_ISL=${SKIP_ISL:-$SKIP_ALL}
-
-SKIP_BINUTILS=${SKIP_BINUTILS:-$SKIP_ALL}
-
-SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
-
-# -----------------------------------------------------------------------------
-
-# SKIP_ZLIB=false
-# SKIP_OPENSSL=false
-# SKIP_CURL=false
-
-# SKIP_XZ=false
-# SKIP_TAR=false
-
-# SKIP_M4=false
-# SKIP_GAWK=false
-# SKIP_AUTOCONF=false
-# SKIP_AUTOMAKE=false
-# SKIP_LIBTOOL=false
-# SKIP_GETTEXT=false
-# SKIP_PATCH=false
-# SKIP_DIFUTILS=false
-# SKIP_BISON=false
-
-# SKIP_PKG_CONFIG=false
-# SKIP_FLEX=false
-# SKIP_PERL=false
-
-# SKIP_CMAKE=false
-# SKIP_PYTHON=false
-
-# SKIP_GMP=false
-# SKIP_MPFR=false
-# SKIP_MPC=false
-# SKIP_ISL=false
-
-# SKIP_BINUTILS=false
-# SKIP_GCC=false
-
-# -----------------------------------------------------------------------------
-
 function extract()
 {
   local ARCHIVE_NAME="$1"
@@ -532,7 +552,7 @@ if ! eval_bool "${SKIP_ZLIB}"; then
   (
     xbb_activate_bootstrap
 
-    # Better leave both stati and dynamic, some apps fail without the expected one.
+    # Better leave both static and dynamic, some apps fail without the expected one.
     ./configure --prefix="${XBB}"
     make -j${MAKE_CONCURRENCY}
     make install
@@ -565,8 +585,10 @@ then
     strip --strip-all "${XBB}/bin/openssl"
 
     strip --strip-debug "${XBB}/lib/libcrypto.a" 
-    strip --strip-debug "${XBB}/lib/libcrypto.so."*
     strip --strip-debug "${XBB}/lib/libssl.a" 
+
+    # shared
+    strip --strip-debug "${XBB}/lib/libcrypto.so."*
     strip --strip-debug "${XBB}/lib/libssl.so."*
 
     # Patch the .pc files to add refs to libs.
@@ -582,6 +604,7 @@ then
     
     if [ ! -f "${XBB}/openssl/cert.pem" ]
     then
+      mkdir -p "${XBB}/openssl"
       ln -s /etc/pki/tls/certs/ca-bundle.crt "${XBB}/openssl/cert.pem"
     fi
   )
@@ -655,7 +678,9 @@ then
   (
     xbb_activate_bootstrap
 
+    # Avoid 'configure: error: you should not run configure as root'.
     export FORCE_UNSAFE_CONFIGURE=1
+
     ./configure --prefix="${XBB}" --disable-shared --enable-static
     make -j${MAKE_CONCURRENCY}
     make install-strip
@@ -932,7 +957,6 @@ if ! eval_bool "${SKIP_CMAKE}"; then
     # Is happier with dynamic zlib and curl.
     ./configure --prefix="${XBB}" \
       --parallel=${MAKE_CONCURRENCY} \
-      --verbose \
       --no-qt-gui \
       --no-system-libs 
     make -j${MAKE_CONCURRENCY}
@@ -971,12 +995,12 @@ if ! eval_bool "${SKIP_PYTHON}"; then
   (
     xbb_activate_bootstrap
 
-    # Install setuptools and pip
+    # Install setuptools and pip. Be sure the new version is used.
     echo "Installing setuptools and pip..."
     curl -OL --fail https://bootstrap.pypa.io/ez_setup.py
-    python ez_setup.py
+    "${XBB}/bin/python" ez_setup.py
     rm -f ez_setup.py
-    easy_install pip
+    "${XBB}/bin/easy_install" pip
     rm -f /setuptools*.zip
   )
 fi
@@ -1095,7 +1119,7 @@ then
     xbb_activate_bootstrap
 
     # --disable-shared failed with errors in libstdc++-v3
-    "../${XBB_GCC_FOLDER}/configure" --prefix="${XBB}" \
+    "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" --prefix="${XBB}" \
       --enable-languages=c,c++ \
       --disable-multilib
     make -j${MAKE_CONCURRENCY}
@@ -1111,6 +1135,6 @@ fi
 # rm -rf "$XBB_DOWNLOAD"
 
 # All other can go.
-rm -rf "$XBB_BUILD"
-rm -rf "$XBB_TMP"
-rm -rf "$XBB_INPUT"
+rm -rf "${XBB_BUILD}"
+rm -rf "${XBB_TMP}"
+rm -rf "${XBB_INPUT}"

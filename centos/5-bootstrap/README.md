@@ -33,13 +33,6 @@ $ PATH=/opt/xbb-bootstrap/bin:$PATH
 
 ### Developer
 
-To create the Docker image, use:
-
-```console
-$ docker build --tag "ilegeul/centos:5-bootstrap" \
-https://github.com/ilg-ul/docker/raw/master/centos/5-bootstrap/Dockerfile
-```
-
 To create the Docker image locally, use:
 
 ```console
@@ -53,12 +46,6 @@ On macOS, to prevent entering sleep, use:
 $ caffeinate docker build --tag "ilegeul/centos:5-bootstrap" -f Dockerfile .
 ```
 
-To publish, use:
-
-```console
-$ docker push "ilegeul/centos:5-bootstrap"
-```
-
 To test the image:
 
 ```console
@@ -68,5 +55,11 @@ $ docker run --interactive --tty ilegeul/centos:5-bootstrap
 To create a second version:
 
 ```console
-$ docker build --tag "ilegeul/centos:5-bootstrap-v2" -f Dockerfile-v2 .
+$ caffeinate docker build --tag "ilegeul/centos:5-bootstrap-v2" -f Dockerfile-v2 .
+```
+
+To publish, use:
+
+```console
+$ docker push "ilegeul/centos:5-bootstrap"
 ```
