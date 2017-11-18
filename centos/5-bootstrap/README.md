@@ -44,13 +44,13 @@ To create the Docker image locally, use:
 
 ```console
 $ cd ...
-$ docker build --tag "ilegeul/centos:5-bootstrap" .
+$ docker build --tag "ilegeul/centos:5-bootstrap" -f Dockerfile .
 ```
 
 On macOS, to prevent entering sleep, use:
 
 ```console
-$ caffeinate docker build --tag "ilegeul/centos:5-bootstrap" .
+$ caffeinate docker build --tag "ilegeul/centos:5-bootstrap" -f Dockerfile .
 ```
 
 To publish, use:
@@ -59,3 +59,14 @@ To publish, use:
 $ docker push "ilegeul/centos:5-bootstrap"
 ```
 
+To test the image:
+
+```console
+$ docker run --interactive --tty ilegeul/centos:5-bootstrap
+```
+
+To create a second version:
+
+```console
+$ docker build --tag "ilegeul/centos:5-bootstrap-v2" -f Dockerfile-v2 .
+```
