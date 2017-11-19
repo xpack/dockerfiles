@@ -72,9 +72,11 @@ mkdir -p "${XBB_BUILD}"
 # Note: __EOF__ is quoted to prevent substitutions here.
 cat <<'__EOF__' >> "${XBB}/xbb.sh"
 
+export XBB_FOLDER="/opt/xbb"
+
 function xbb_activate_param()
 {
-  PREFIX_=${PREFIX_:-${XBB}}
+  PREFIX_=${PREFIX_:-${XBB_FOLDER}}
 
   # Do not include -I... here, use CPPFLAGS.
   EXTRA_CFLAGS_=${EXTRA_CFLAGS_:-""}
@@ -105,18 +107,37 @@ function xbb_activate_param()
   export LDPATHFLAGS="-L\"${PREFIX_}/lib\" ${EXTRA_LDPATHFLAGS_}"
 
   # Do not include -I... here, use CPPFLAGS.
-  local MINIMAL_CFLAGS_="-g -O2"
+  local COMMON_CFLAGS_=${COMMON_CFLAGS_:-"-g -O2"}
+  local COMMON_CXXFLAGS_=${COMMON_CXXFLAGS_:-${COMMON_CFLAGS_}}
 
-  export CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CFLAGS_}"
-	export CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CXXFLAGS_}"
+  export CFLAGS="${COMMON_CFLAGS_} ${EXTRA_CFLAGS_}"
+	export CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_CXXFLAGS_}"
   export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
-	export STATICLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
-	export STATICLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
+	export STATICLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
+	export STATICLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
 
-	export SHLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
-	export SHLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
+	export SHLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
+	export SHLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
   export SHLIB_LDFLAGS="${LDPATHFLAGS} ${EXTRA_SHLIB_LDFLAGS_}"
+
+  echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
+  echo
+  echo PATH=${PATH}
+  echo
+  echo CFLAGS=${CFLAGS}
+  echo CXXFLAGS=${CXXFLAGS}
+  echo LDFLAGS=${LDFLAGS}
+  echo
+  echo STATICLIB_CFLAGS=${STATICLIB_CFLAGS}
+  echo STATICLIB_CXXFLAGS=${STATICLIB_CXXFLAGS}
+  echo
+  echo SHLIB_CFLAGS=${SHLIB_CFLAGS}
+  echo SHLIB_CXXFLAGS=${SHLIB_CXXFLAGS}
+  echo SHLIB_LDFLAGS=${SHLIB_LDFLAGS}
+  echo
+  echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+  echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 }
 
 xbb_activate()
@@ -125,6 +146,7 @@ xbb_activate()
   EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
   EXTRA_LDFLAGS_="-Wl,--gc-sections"
   EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_SHLIB_CFLAGS_="-fPIC"
 
   xbb_activate_param 
 }
@@ -132,9 +154,22 @@ xbb_activate()
 xbb_activate_static()
 {
   PREFIX_="${XBB}"
-  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections -fvisibility=hidden"
   EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections"
-  EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections -fvisibility=hidden"
+  EXTRA_SHLIB_CFLAGS_="-fvisibility=hidden -fPIC"
+  EXTRA_SHLIB_LDFLAGS_="-static-libstdc++"
+
+  xbb_activate_param 
+}
+
+xbb_activate_shared()
+{
+  PREFIX_="${XBB}"
+  EXTRA_CFLAGS_="-fvisibility=hidden"
+  EXTRA_LDFLAGS_="-static-libstdc++"
+  EXTRA_STATICLIB_CFLAGS_="-fvisibility=hidden"
+  EXTRA_SHLIB_CFLAGS_="-fvisibility=hidden -fPIC"
   EXTRA_SHLIB_LDFLAGS_="-static-libstdc++"
 
   xbb_activate_param 
@@ -167,7 +202,7 @@ xbb_activate_bootstrap
 
 # -----------------------------------------------------------------------------
 
-# SKIP_ALL=true
+SKIP_ALL=true
 
 # SKIP_ZLIB=true
 # SKIP_OPENSSL=true
@@ -551,7 +586,8 @@ function eval_bool()
 # Generally build only the static versions of the libraries.
 # (the exception are libcrypto.so libcurl.so libssl.so)
 
-if ! eval_bool "${SKIP_ZLIB}"; then
+if ! eval_bool "${SKIP_ZLIB}"
+then
   echo "Building zlib ${XBB_ZLIB_VERSION}..."
   cd "${XBB_BUILD}"
 
