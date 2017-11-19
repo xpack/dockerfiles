@@ -201,7 +201,7 @@ xbb_activate_bootstrap
 # SKIP_ISL=true
 
 # SKIP_BINUTILS=true
-# SKIP_GCC=true
+SKIP_GCC=true
 
 # -----------------------------------------------------------------------------
 

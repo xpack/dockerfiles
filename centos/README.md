@@ -25,10 +25,17 @@ The compiler is GCC 4.1.2, too old for modern builds.
 
 Another limitation is `curl`, which cannot access https sites.
 
-### 5-bootstrap
+### 5-bootstrap (DEPRECATED)
 
 On top of the CentOS 5.11 development image, a set of tools are compiled from relatively new source code versions.
 
 Some of the latest versions no longer build with GCC 4.1.2, so they required backing up a few steps, but this should not be a problem.
 
 These tools should be enough to build a modern GCC.
+
+
+### 5-hbb (DEPRECATED)
+
+Attempt to create a CentOS 5 build box.
+
+Unfortunately the 'old glibc with new gcc' bug prevented further developments with Cent OS 5.
