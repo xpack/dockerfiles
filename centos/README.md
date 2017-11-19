@@ -8,6 +8,31 @@ To test the images, use something like:
 $ docker run --interactive --tty ilegeul/centos:5-bootstrap
 ```
 
+### 6-develop
+
+On top of the final CentOS 6.9, this script adds some of the development tools, required to build the bootstrap and the newer compiler.
+
+Versions:
+
+* GCC 4.4.7.
+* glibc 2.12
+* kernel 4.9.49
+
+### 6-bootstrap
+
+On top of the CentOS 6.9 development image, a set of tools are compiled from new source code versions.
+
+The major addition is GCC 7.2.0.
+
+The custom files are in `/opt/xbb-bootstrap`.
+
+### 6-xbb
+
+This is the final image, compiled with the bootstrap GCC.
+
+The custom files are in `/opt/xbb`.
+
+
 ### 5-final
 
 This creates a Docker image with the latest version of a CentOS 5 system.
