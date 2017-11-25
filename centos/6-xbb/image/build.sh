@@ -34,7 +34,12 @@ IFS=$'\n\t'
 
 # Libraries have been installed in:
 #    /opt/xbb/lib
-# 
+
+# To activate the new build environment, use:
+#
+#   $ source /opt/xbb/xbb.sh
+#   $ xbb_activate
+
 # If you ever happen to want to link against installed libraries
 # in a given directory, LIBDIR, you must either use libtool, and
 # specify the full pathname of the library, or use the '-LLIBDIR'
@@ -202,7 +207,7 @@ xbb_activate_bootstrap
 
 # -----------------------------------------------------------------------------
 
-SKIP_ALL=true
+# SKIP_ALL=true
 
 # SKIP_ZLIB=true
 # SKIP_OPENSSL=true
@@ -235,6 +240,8 @@ SKIP_ALL=true
 
 # SKIP_BINUTILS=true
 # SKIP_GCC=true
+
+# SKIP_MINGW=true
 
 # -----------------------------------------------------------------------------
 
@@ -275,6 +282,8 @@ SKIP_BINUTILS=${SKIP_BINUTILS:-$SKIP_ALL}
 
 SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
 
+SKIP_MINGW=${SKIP_MINGW:-$SKIP_ALL}
+
 # -----------------------------------------------------------------------------
 
 # SKIP_ZLIB=false
@@ -308,6 +317,8 @@ SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
 
 # SKIP_BINUTILS=false
 # SKIP_GCC=false
+
+# SKIP_MINGW=false
 
 # -----------------------------------------------------------------------------
 # Build curl with latest openssl.
@@ -550,6 +561,16 @@ XBB_GCC_URL="https://ftp.gnu.org/gnu/gcc/gcc-${XBB_GCC_VERSION}/${XBB_GCC_ARCHIV
 
 # -----------------------------------------------------------------------------
 
+# http://mingw-w64.org/doku.php/start
+# https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/
+# 2017-11-04
+XBB_MINGW_VERSION="5.0.3"
+XBB_MINGW_FOLDER="mingw-w64-v${XBB_MINGW_VERSION}"
+XBB_MINGW_ARCHIVE="${XBB_MINGW_FOLDER}.tar.bz2"
+XBB_MINGW_URL="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/${XBB_MINGW_ARCHIVE}"
+
+# -----------------------------------------------------------------------------
+
 function extract()
 {
   local ARCHIVE_NAME="$1"
@@ -583,11 +604,12 @@ function eval_bool()
 # on previous ones.
 # For extra safety, the ${XBB} is not permanently in PATH,
 # it is added explicitly with xbb_activate in sub-shells.
-# Generally build only the static versions of the libraries.
-# (the exception are libcrypto.so libcurl.so libssl.so)
+# Generally only the static versions of the libraries are build.
+# (the exceptions are libcrypto.so libcurl.so libssl.so)
 
 if ! eval_bool "${SKIP_ZLIB}"
 then
+  echo
   echo "Building zlib ${XBB_ZLIB_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -609,6 +631,7 @@ fi
 
 if ! eval_bool "${SKIP_OPENSSL}"
 then
+  echo
   echo "Building openssl ${XBB_OPENSSL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -616,7 +639,7 @@ then
 
   pushd "${XBB_OPENSSL_FOLDER}"
   (
-    # OpenSSL already passes optimization flags regardless of CFLAGS
+    # OpenSSL already passes optimization flags regardless of CFLAGS.
 		export CFLAGS=`echo "$STATICLIB_CFLAGS" | sed 's/-O2//'`
 
     # Without the 'shared' option some further builds fail.
@@ -658,6 +681,7 @@ fi
 
 if ! eval_bool "${SKIP_CURL}"
 then
+  echo
   echo "Building curl ${XBB_CURL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -695,6 +719,7 @@ fi
 
 if ! eval_bool "${SKIP_XZ}"
 then
+  echo
   echo "Building xz ${XBB_XZ_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -717,6 +742,7 @@ fi
 # Requires xz
 if ! eval_bool "${SKIP_TAR}"
 then
+  echo
   echo "Building tar ${XBB_TAR_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -741,6 +767,7 @@ fi
 
 if ! eval_bool "${SKIP_M4}"
 then
+  echo
   echo "Building m4 ${XBB_M4_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -760,6 +787,7 @@ fi
 
 if ! eval_bool "${SKIP_GAWK}"
 then
+  echo
   echo "Building gawk ${XBB_GAWK_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -777,7 +805,9 @@ then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_AUTOCONF}"; then
+if ! eval_bool "${SKIP_AUTOCONF}"
+then
+  echo
   echo "Building autoconf ${XBB_AUTOCONF_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -795,7 +825,9 @@ if ! eval_bool "${SKIP_AUTOCONF}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_AUTOMAKE}"; then
+if ! eval_bool "${SKIP_AUTOMAKE}"
+then
+  echo
   echo "Building automake ${XBB_AUTOMAKE_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -813,7 +845,9 @@ if ! eval_bool "${SKIP_AUTOMAKE}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_LIBTOOL}"; then
+if ! eval_bool "${SKIP_LIBTOOL}"
+then
+  echo
   echo "Building libtool ${XBB_LIBTOOL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -831,7 +865,9 @@ if ! eval_bool "${SKIP_LIBTOOL}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_GETTEXT}"; then
+if ! eval_bool "${SKIP_GETTEXT}"
+then
+  echo
   echo "Building gettext ${XBB_GETTEXT_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -851,7 +887,9 @@ if ! eval_bool "${SKIP_GETTEXT}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PATCH}"; then
+if ! eval_bool "${SKIP_PATCH}"
+then
+  echo
   echo "Building patch ${XBB_PATCH_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -869,7 +907,9 @@ if ! eval_bool "${SKIP_PATCH}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_DIFFUTILS}"; then
+if ! eval_bool "${SKIP_DIFFUTILS}"
+then
+  echo
   echo "Building diffutils ${XBB_DIFFUTILS_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -887,7 +927,9 @@ if ! eval_bool "${SKIP_DIFFUTILS}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_BISON}"; then
+if ! eval_bool "${SKIP_BISON}"
+then
+  echo
   echo "Building bison ${XBB_BISON_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -907,7 +949,9 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if ! eval_bool "${SKIP_PKG_CONFIG}"; then
+if ! eval_bool "${SKIP_PKG_CONFIG}"
+then
+  echo
   echo "Building pkg-config ${XBB_PKG_CONFIG_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -928,7 +972,9 @@ if ! eval_bool "${SKIP_PKG_CONFIG}"; then
 fi
 
 # Requires gettext
-if ! eval_bool "${SKIP_FLEX}"; then
+if ! eval_bool "${SKIP_FLEX}"
+then
+  echo
   echo "Building flex ${XBB_FLEX_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -947,7 +993,9 @@ if ! eval_bool "${SKIP_FLEX}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PERL}"; then
+if ! eval_bool "${SKIP_PERL}"
+then
+  echo
   echo "Building perl ${XBB_PERL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -975,7 +1023,9 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if ! eval_bool "${SKIP_CMAKE}"; then
+if ! eval_bool "${SKIP_CMAKE}"
+then
+  echo
   echo "Installing cmake ${XBB_CMAKE_VERSION}"
   cd "${XBB_BUILD}"
 
@@ -998,7 +1048,9 @@ if ! eval_bool "${SKIP_CMAKE}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PYTHON}"; then
+if ! eval_bool "${SKIP_PYTHON}"
+then
+  echo
   echo "Installing python ${XBB_PYTHON_VERSION}"
   cd "${XBB_BUILD}"
 
@@ -1034,8 +1086,11 @@ if ! eval_bool "${SKIP_PYTHON}"; then
 fi
 
 # -----------------------------------------------------------------------------
+# GCC libraries.
 
-if ! eval_bool "${SKIP_GMP}"; then
+if ! eval_bool "${SKIP_GMP}"
+then
+  echo
   echo "Building gmp ${XBB_GMP_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1053,7 +1108,9 @@ if ! eval_bool "${SKIP_GMP}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_MPFR}"; then
+if ! eval_bool "${SKIP_MPFR}"
+then
+  echo
   echo "Building mpfr ${XBB_MPFR_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1071,7 +1128,9 @@ if ! eval_bool "${SKIP_MPFR}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_MPC}"; then
+if ! eval_bool "${SKIP_MPC}"
+then
+  echo
   echo "Building mpc ${XBB_MPC_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1089,7 +1148,9 @@ if ! eval_bool "${SKIP_MPC}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_ISL}"; then
+if ! eval_bool "${SKIP_ISL}"
+then
+  echo
   echo "Building isl ${XBB_ISL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1107,17 +1168,20 @@ if ! eval_bool "${SKIP_ISL}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_BINUTILS}"; then
-  echo "Building binutils ${XBB_BINUTILS_VERSION}..."
+if ! eval_bool "${SKIP_BINUTILS}"
+then
+  echo
+  echo "Building native binutils ${XBB_BINUTILS_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_BINUTILS_ARCHIVE}" "${XBB_BINUTILS_URL}"
 
-  pushd "${XBB_BINUTILS_FOLDER}"
+  mkdir -p "${XBB_BINUTILS_FOLDER}-native-build"
+  pushd "${XBB_BINUTILS_FOLDER}-native-build"
   (
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
 
-    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}/configure" --prefix="${XBB}" --disable-shared --enable-static
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1128,10 +1192,12 @@ if ! eval_bool "${SKIP_BINUTILS}"; then
 fi
 
 # -----------------------------------------------------------------------------
+# GCC.
 
 if ! eval_bool "${SKIP_GCC}"
 then
-  echo "Building gcc ${XBB_GCC_VERSION}..."
+  echo
+  echo "Building native gcc ${XBB_GCC_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_GCC_ARCHIVE}" "${XBB_GCC_URL}"
@@ -1154,6 +1220,163 @@ then
 fi
 
 # -----------------------------------------------------------------------------
+# mingw-w64
+
+# https://sourceforge.net/p/mingw-w64/wiki2/Cross%20Win32%20and%20Win64%20compiler/
+# https://sourceforge.net/p/mingw-w64/mingw-w64/ci/master/tree/configure
+
+mingw_target=x86_64-w64-mingw32
+# mingw_target=i686-w64-mingw32
+
+mingw_build=x86_64-linux-gnu
+
+if ! eval_bool "${SKIP_MINGW}"
+then
+
+  echo
+  echo "Building mingw-w64 binutils ${XBB_BINUTILS_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_BINUTILS_ARCHIVE}" "${XBB_BINUTILS_URL}"
+
+  mkdir -p "${XBB_BINUTILS_FOLDER}-mingw-build"
+  pushd "${XBB_BINUTILS_FOLDER}-mingw-build"
+  (
+    export CFLAGS="${CFLAGS} -Wno-sign-compare"
+
+    "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}/configure" \
+      --prefix="${XBB}" \
+      --with-sysroot="${XBB}" \
+      --disable-shared \
+      --enable-static \
+      --target=${mingw_target} \
+      --disable-multilib
+
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+  echo
+  echo "Building mingw-w64 headers ${XBB_MINGW_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MINGW_ARCHIVE}" "${XBB_MINGW_URL}"
+
+  mkdir -p "${XBB_MINGW_FOLDER}-headers-build"
+  pushd "${XBB_MINGW_FOLDER}-headers-build"
+  (
+    export PATH="${XBB}/bin":${PATH}
+
+    "${XBB_BUILD}/${XBB_MINGW_FOLDER}/mingw-w64-headers/configure" \
+      --prefix="${XBB}/${mingw_target}" \
+      --build="${mingw_build}" \
+      --host="${mingw_target}"
+
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+
+    # GCC requires the `x86_64-w64-mingw32` folder be mirrored as `mingw` 
+    # in the same root. 
+    (cd "${XBB}"; ln -s "${mingw_target}" "mingw")
+
+    # For non-multilib builds, links to "lib32" and "lib64" are no longer 
+    # needed, "lib" is enough.
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+  echo
+  echo "Building mingw-w64 gcc ${XBB_GCC_VERSION}, step 1..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GCC_ARCHIVE}" "${XBB_GCC_URL}"
+
+  mkdir -p "${XBB_GCC_FOLDER}-mingw-build"
+  pushd "${XBB_GCC_FOLDER}-mingw-build"
+  (
+    export PATH="${XBB}/bin":${PATH}
+    export CFLAGS="${CFLAGS} -Wno-sign-compare -Wno-implicit-function-declaration -Wno-missing-prototypes"
+    export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
+
+    # For the native build, --disable-shared failed with errors in libstdc++-v3
+    "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" --prefix="${XBB}" \
+      --prefix="${XBB}" \
+      --with-sysroot="${XBB}" \
+      --target=${mingw_target} \
+      --enable-languages=c,c++ \
+      --enable-static \
+      --disable-multilib
+
+    make all-gcc -j${MAKE_CONCURRENCY}
+    make install-gcc
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+  echo
+  echo "Building mingw-w64 crt ${XBB_MINGW_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MINGW_ARCHIVE}" "${XBB_MINGW_URL}"
+
+  mkdir -p "${XBB_MINGW_FOLDER}-crt-build"
+  pushd "${XBB_MINGW_FOLDER}-crt-build"
+  (
+    export PATH="${XBB}/bin":${PATH}
+    export CFLAGS="-g -O2 -Wno-unused-variable -Wno-implicit-fallthrough -Wno-implicit-function-declaration -Wno-cpp"
+    export CXXFLAGS="-g -O2"
+    export LDFLAGS=""
+
+    "${XBB_BUILD}/${XBB_MINGW_FOLDER}/configure" \
+      --prefix="${XBB}/${mingw_target}" \
+      --with-sysroot="${XBB}" \
+      --host="${mingw_target}" \
+      --disable-lib32 \
+      --enable-lib64
+
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+
+    ls -l "${XBB}" "${XBB}/${mingw_target}"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+  echo
+  echo "Building mingw-w64 gcc ${XBB_GCC_VERSION}, step 2..."
+  cd "${XBB_BUILD}"
+
+  # download_and_extract "${XBB_GCC_ARCHIVE}" "${XBB_GCC_URL}"
+
+  mkdir -p "${XBB_GCC_FOLDER}-mingw-build"
+  pushd "${XBB_GCC_FOLDER}-mingw-build"
+  (
+    export PATH="${XBB}/bin":${PATH}
+    export CFLAGS="${CFLAGS} -Wno-sign-compare -Wno-implicit-function-declaration -Wno-missing-prototypes"
+    export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
+
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+fi
+
+# -----------------------------------------------------------------------------
+
 
 # rm -rf "${XBB_DOWNLOAD}"
 # rm -rf "${XBB_BOOTSTARP}"

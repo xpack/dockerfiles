@@ -73,6 +73,8 @@ To create a second, third, etc version:
 ```console
 $ caffeinate docker build --tag "ilegeul/centos:6-xbb-v2" -f Dockerfile-v2 .
 $ caffeinate docker build --tag "ilegeul/centos:6-xbb-v3" -f Dockerfile-v3 .
+$ caffeinate docker build --tag "ilegeul/centos:6-xbb-v4" -f Dockerfile-v4 .
+$ caffeinate docker build --tag "ilegeul/centos:6-xbb-v5" -f Dockerfile-v5 .
 ```
 
 #### Test
@@ -83,6 +85,8 @@ To test the image:
 $ docker run --interactive --tty ilegeul/centos:6-xbb
 $ docker run --interactive --tty ilegeul/centos:6-xbb-v2
 $ docker run --interactive --tty ilegeul/centos:6-xbb-v3
+$ docker run --interactive --tty ilegeul/centos:6-xbb-v4
+$ docker run --interactive --tty ilegeul/centos:6-xbb-v5
 ```
 
 #### Publish
