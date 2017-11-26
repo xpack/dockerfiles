@@ -21,13 +21,13 @@ To create the Docker image locally, use:
 
 ```console
 $ cd ...
-$ docker build --tag "ilegeul/centos:6-develop" -f Dockerfile .
+$ docker build --squash --tag "ilegeul/centos:6-develop" -f Dockerfile .
 ```
 
 On macOS, to prevent entering sleep, use:
 
 ```console
-$ caffeinate docker build --tag "ilegeul/centos:6-develop" -f Dockerfile .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-develop" -f Dockerfile .
 ```
 
 To test the image:
