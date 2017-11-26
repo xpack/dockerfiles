@@ -185,6 +185,25 @@ __EOF__
 
 # -----------------------------------------------------------------------------
 
+# Note: __EOF__ is quoted to prevent substitutions here.
+mkdir -p "${XBB}/bin"
+cat <<'__EOF__' >> "${XBB}/bin/pkg-config-verbose"
+#! /bin/sh
+# pkg-config wrapper for debug
+
+pkg-config $@
+RET=$?
+OUT=$(pkg-config $@)
+echo "($PKG_CONFIG_PATH) | pkg-config $@ -> $RET [$OUT]" >&2
+exit ${RET}
+
+__EOF__
+# The above marker must start in the first column.
+
+chmod +x "${XBB}/bin/pkg-config-verbose"
+
+# -----------------------------------------------------------------------------
+
 # Use the bootstrap tools.
 source "${XBB_BOOTSTRAP}/xbb.sh"
 
