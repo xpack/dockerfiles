@@ -108,7 +108,7 @@ function xbb_activate_param()
   export PKG_CONFIG_PATH="${PREFIX_}/lib/pkgconfig":/usr/lib/pkgconfig
   export LD_LIBRARY_PATH="${PREFIX_}/lib"
 
-  export CPPFLAGS=-I"${PREFIX_}/include"
+  export CPPFLAGS="-I\"${PREFIX_}/include\""
   export LDPATHFLAGS="-L\"${PREFIX_}/lib\" ${EXTRA_LDPATHFLAGS_}"
 
   # Do not include -I... here, use CPPFLAGS.
@@ -235,6 +235,14 @@ xbb_activate_bootstrap
 # SKIP_XZ=true
 # SKIP_TAR=true
 
+# SKIP_GMP=true
+# SKIP_MPFR=true
+# SKIP_MPC=true
+# SKIP_ISL=true
+# SKIP_NETTLE=true
+# SKIP_TASN1=true
+# SKIP_GNUTLS=true
+
 # SKIP_M4=true
 # SKIP_GAWK=true
 # SKIP_AUTOCONF=true
@@ -244,23 +252,24 @@ xbb_activate_bootstrap
 # SKIP_PATCH=true
 # SKIP_DIFUTILS=true
 # SKIP_BISON=true
+# SKIP_MAKE=true
+# SKIP_WGET=true
 
 # SKIP_PKG_CONFIG=true
 # SKIP_FLEX=true
 # SKIP_PERL=true
-
 # SKIP_CMAKE=true
 # SKIP_PYTHON=true
-
-# SKIP_GMP=true
-# SKIP_MPFR=true
-# SKIP_MPC=true
-# SKIP_ISL=true
+# SKIP_SCONS=true
+# SKIP_NSIS=true
+# SKIP_GIT=true
 
 # SKIP_BINUTILS=true
 # SKIP_GCC=true
 
 # SKIP_MINGW=true
+
+ SKIP_TEXLIVE=true
 
 # -----------------------------------------------------------------------------
 
@@ -275,6 +284,14 @@ SKIP_CURL=${SKIP_CURL:-$SKIP_ALL}
 SKIP_XZ=${SKIP_XZ:-$SKIP_ALL}
 SKIP_TAR=${SKIP_TAR:-$SKIP_ALL}
 
+SKIP_GMP=${SKIP_GMP:-$SKIP_ALL}
+SKIP_MPFR=${SKIP_MPFR:-$SKIP_ALL}
+SKIP_MPC=${SKIP_MPC:-$SKIP_ALL}
+SKIP_ISL=${SKIP_ISL:-$SKIP_ALL}
+SKIP_NETTLE=${SKIP_NETTLE:-$SKIP_ALL}
+SKIP_TASN1=${SKIP_TASN1:-$SKIP_ALL}
+SKIP_GNUTLS=${SKIP_GNUTLS:-$SKIP_ALL}
+
 SKIP_M4=${SKIP_M4:-$SKIP_ALL}
 SKIP_GAWK=${SKIP_GAWK:-$SKIP_ALL}
 SKIP_AUTOCONF=${SKIP_AUTOCONF:-$SKIP_ALL}
@@ -284,24 +301,25 @@ SKIP_GETTEXT=${SKIP_GETTEXT:-$SKIP_ALL}
 SKIP_PATCH=${SKIP_PATCH:-$SKIP_ALL}
 SKIP_DIFFUTILS=${SKIP_DIFFUTILS:-$SKIP_ALL}
 SKIP_BISON=${SKIP_BISON:-$SKIP_ALL}
+SKIP_MAKE=${SKIP_MAKE:-$SKIP_ALL}
+SKIP_WGET=${SKIP_WGET:-$SKIP_ALL}
 
 SKIP_PKG_CONFIG=${SKIP_PKG_CONFIG:-$SKIP_ALL}
 SKIP_FLEX=${SKIP_FLEX:-$SKIP_ALL}
 SKIP_PERL=${SKIP_PERL:-$SKIP_ALL}
-
 SKIP_CMAKE=${SKIP_CMAKE:-$SKIP_ALL}
 SKIP_PYTHON=${SKIP_PYTHON:-$SKIP_ALL}
-
-SKIP_GMP=${SKIP_GMP:-$SKIP_ALL}
-SKIP_MPFR=${SKIP_MPFR:-$SKIP_ALL}
-SKIP_MPC=${SKIP_MPC:-$SKIP_ALL}
-SKIP_ISL=${SKIP_ISL:-$SKIP_ALL}
+SKIP_SCONS=${SKIP_SCONS:-$SKIP_ALL}
+SKIP_NSIS=${SKIP_NSIS:-$SKIP_ALL}
+SKIP_GIT=${SKIP_GIT:-$SKIP_ALL}
 
 SKIP_BINUTILS=${SKIP_BINUTILS:-$SKIP_ALL}
 
 SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
 
 SKIP_MINGW=${SKIP_MINGW:-$SKIP_ALL}
+
+SKIP_TEXLIVE=${SKIP_TEXLIVE:-$SKIP_ALL}
 
 # -----------------------------------------------------------------------------
 
@@ -312,6 +330,14 @@ SKIP_MINGW=${SKIP_MINGW:-$SKIP_ALL}
 # SKIP_XZ=false
 # SKIP_TAR=false
 
+# SKIP_GMP=false
+# SKIP_MPFR=false
+# SKIP_MPC=false
+# SKIP_ISL=false
+# SKIP_NETTLE=false
+# SKIP_TASN1=false
+# SKIP_GNUTLS=false
+
 # SKIP_M4=false
 # SKIP_GAWK=false
 # SKIP_AUTOCONF=false
@@ -321,23 +347,23 @@ SKIP_MINGW=${SKIP_MINGW:-$SKIP_ALL}
 # SKIP_PATCH=false
 # SKIP_DIFUTILS=false
 # SKIP_BISON=false
+# SKIP_MAKE=false
+# SKIP_WGET=false
 
 # SKIP_PKG_CONFIG=false
 # SKIP_FLEX=false
 # SKIP_PERL=false
-
 # SKIP_CMAKE=false
 # SKIP_PYTHON=false
-
-# SKIP_GMP=false
-# SKIP_MPFR=false
-# SKIP_MPC=false
-# SKIP_ISL=false
+# SKIP_SCONS=false
+# SKIP_NSIS=false
+# SKIP_GIT=false
 
 # SKIP_BINUTILS=false
 # SKIP_GCC=false
 
 # SKIP_MINGW=false
+# SKIP_TEXLIVE=false
 
 # -----------------------------------------------------------------------------
 # Build curl with latest openssl.
@@ -384,6 +410,68 @@ XBB_TAR_VERSION="1.29"
 XBB_TAR_FOLDER="tar-${XBB_TAR_VERSION}"
 XBB_TAR_ARCHIVE="${XBB_TAR_FOLDER}.tar.xz"
 XBB_TAR_URL="https://ftp.gnu.org/gnu/tar/${XBB_TAR_ARCHIVE}"
+
+# -----------------------------------------------------------------------------
+
+# https://gmplib.org
+# https://gmplib.org/download/gmp/
+# 16-Dec-2016
+XBB_GMP_VERSION="6.1.2"
+XBB_GMP_FOLDER="gmp-${XBB_GMP_VERSION}"
+XBB_GMP_ARCHIVE="${XBB_GMP_FOLDER}.tar.xz"
+XBB_GMP_URL="https://gmplib.org/download/gmp/${XBB_GMP_ARCHIVE}"
+
+# http://www.mpfr.org
+# http://www.mpfr.org/mpfr-3.1.6
+# http://www.mpfr.org/mpfr-3.1.6/mpfr-3.1.6.tar.bz2
+# 7 September 2017
+XBB_MPFR_VERSION="3.1.6"
+XBB_MPFR_FOLDER="mpfr-${XBB_MPFR_VERSION}"
+XBB_MPFR_ARCHIVE="${XBB_MPFR_FOLDER}.tar.xz"
+XBB_MPFR_URL="http://www.mpfr.org/${XBB_MPFR_FOLDER}/${XBB_MPFR_ARCHIVE}"
+
+# http://www.multiprecision.org/
+# ftp://ftp.gnu.org/gnu/mpc
+# ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
+# February 2015
+XBB_MPC_VERSION="1.0.3"
+XBB_MPC_FOLDER="mpc-${XBB_MPC_VERSION}"
+XBB_MPC_ARCHIVE="${XBB_MPC_FOLDER}.tar.gz"
+XBB_MPC_URL="ftp://ftp.gnu.org/gnu/mpc/${XBB_MPC_ARCHIVE}"
+
+# http://isl.gforge.inria.fr
+# http://isl.gforge.inria.fr/isl-0.16.1.tar.bz2
+# 2016-12-20
+XBB_ISL_VERSION="0.18"
+XBB_ISL_FOLDER="isl-${XBB_ISL_VERSION}"
+XBB_ISL_ARCHIVE="${XBB_ISL_FOLDER}.tar.xz"
+XBB_ISL_URL="http://isl.gforge.inria.fr/${XBB_ISL_ARCHIVE}"
+
+# https://www.lysator.liu.se/~nisse/nettle/
+# https://ftp.gnu.org/gnu/nettle/
+# 2017-11-19
+XBB_NETTLE_VERSION="3.4"
+XBB_NETTLE_FOLDER="nettle-${XBB_NETTLE_VERSION}"
+XBB_NETTLE_ARCHIVE="${XBB_NETTLE_FOLDER}.tar.gz"
+XBB_NETTLE_URL="https://ftp.gnu.org/gnu/nettle/${XBB_NETTLE_ARCHIVE}"
+
+# https://www.gnu.org/software/libtasn1/
+# http://ftp.gnu.org/gnu/libtasn1/
+# 2017-11-19
+XBB_TASN1_VERSION="4.12"
+XBB_TASN1_FOLDER="libtasn1-${XBB_TASN1_VERSION}"
+# .gz only.
+XBB_TASN1_ARCHIVE="${XBB_TASN1_FOLDER}.tar.gz"
+XBB_TASN1_URL="https://ftp.gnu.org/gnu/libtasn1/${XBB_TASN1_ARCHIVE}"
+
+# http://www.gnutls.org/
+# https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/
+# 2017-10-21
+XBB_GNUTLS_MAJOR_VERSION="3.5"
+XBB_GNUTLS_VERSION="${XBB_GNUTLS_MAJOR_VERSION}.16"
+XBB_GNUTLS_FOLDER="gnutls-${XBB_GNUTLS_VERSION}"
+XBB_GNUTLS_ARCHIVE="${XBB_GNUTLS_FOLDER}.tar.xz"
+XBB_GNUTLS_URL="https://www.gnupg.org/ftp/gcrypt/gnutls/v${XBB_GNUTLS_MAJOR_VERSION}/${XBB_GNUTLS_ARCHIVE}"
 
 # -----------------------------------------------------------------------------
 # Build GNU tools.
@@ -461,6 +549,23 @@ XBB_BISON_FOLDER="bison-${XBB_BISON_VERSION}"
 XBB_BISON_ARCHIVE="${XBB_BISON_FOLDER}.tar.xz"
 XBB_BISON_URL="https://ftp.gnu.org/gnu/bison/${XBB_BISON_ARCHIVE}"
 
+# https://www.gnu.org/software/make/
+# https://ftp.gnu.org/gnu/make/
+# 2016-06-10
+XBB_MAKE_VERSION="4.2.1"
+XBB_MAKE_FOLDER="make-${XBB_MAKE_VERSION}"
+# Only .bz2 available.
+XBB_MAKE_ARCHIVE="${XBB_MAKE_FOLDER}.tar.bz2"
+XBB_MAKE_URL="https://ftp.gnu.org/gnu/make/${XBB_MAKE_ARCHIVE}"
+
+# https://www.gnu.org/software/wget/
+# https://ftp.gnu.org/gnu/wget/
+# 2016-06-10
+XBB_WGET_VERSION="1.19"
+XBB_WGET_FOLDER="wget-${XBB_WGET_VERSION}"
+XBB_WGET_ARCHIVE="${XBB_WGET_FOLDER}.tar.xz"
+XBB_WGET_URL="https://ftp.gnu.org/gnu/wget/${XBB_WGET_ARCHIVE}"
+
 # -----------------------------------------------------------------------------
 # Build third party tools.
 
@@ -492,8 +597,8 @@ XBB_PERL_URL="http://www.cpan.org/src/${XBB_PERL_MAJOR_VERSION}/${XBB_PERL_ARCHI
 # https://cmake.org
 # https://cmake.org/download/
 # November 10, 2017
-XBB_CMAKE_VERSION="3.9.6"
 XBB_CMAKE_MAJOR_VERSION="3.9"
+XBB_CMAKE_VERSION="${XBB_CMAKE_MAJOR_VERSION}.6"
 XBB_CMAKE_FOLDER="cmake-${XBB_CMAKE_VERSION}"
 XBB_CMAKE_ARCHIVE="${XBB_CMAKE_FOLDER}.tar.gz"
 XBB_CMAKE_URL="https://cmake.org/files/v${XBB_CMAKE_MAJOR_VERSION}/${XBB_CMAKE_ARCHIVE}"
@@ -506,37 +611,21 @@ XBB_PYTHON_FOLDER="Python-${XBB_PYTHON_VERSION}"
 XBB_PYTHON_ARCHIVE="${XBB_PYTHON_FOLDER}.tar.xz"
 XBB_PYTHON_URL="https://www.python.org/ftp/python/${XBB_PYTHON_VERSION}/${XBB_PYTHON_ARCHIVE}"
 
-# https://gmplib.org
-# https://gmplib.org/download/gmp/
-# 16-Dec-2016
-XBB_GMP_VERSION="6.1.2"
-XBB_GMP_FOLDER="gmp-${XBB_GMP_VERSION}"
-XBB_GMP_ARCHIVE="${XBB_GMP_FOLDER}.tar.xz"
-XBB_GMP_URL="https://gmplib.org/download/gmp/${XBB_GMP_ARCHIVE}"
+# http://scons.org
+# https://sourceforge.net/projects/scons/files/scons/3.0.1/
+# 2017-09-16
+XBB_SCONS_VERSION="3.0.1"
+XBB_SCONS_FOLDER="scons-${XBB_SCONS_VERSION}"
+XBB_SCONS_ARCHIVE="${XBB_SCONS_FOLDER}.tar.gz"
+XBB_SCONS_URL="https://sourceforge.net/projects/scons/files/scons/${XBB_SCONS_VERSION}/${XBB_SCONS_ARCHIVE}"
 
-# http://www.mpfr.org
-# http://www.mpfr.org/mpfr-3.1.6/mpfr-3.1.6.tar.bz2
-# 7 September 2017
-XBB_MPFR_VERSION="3.1.6"
-XBB_MPFR_FOLDER="mpfr-${XBB_MPFR_VERSION}"
-XBB_MPFR_ARCHIVE="${XBB_MPFR_FOLDER}.tar.xz"
-XBB_MPFR_URL="http://www.mpfr.org/${XBB_MPFR_FOLDER}/${XBB_MPFR_ARCHIVE}"
-
-# http://www.multiprecision.org/
-# ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
-# February 2015
-XBB_MPC_VERSION="1.0.3"
-XBB_MPC_FOLDER="mpc-${XBB_MPC_VERSION}"
-XBB_MPC_ARCHIVE="${XBB_MPC_FOLDER}.tar.gz"
-XBB_MPC_URL="ftp://ftp.gnu.org/gnu/mpc/${XBB_MPC_ARCHIVE}"
-
-# http://isl.gforge.inria.fr
-# http://isl.gforge.inria.fr/isl-0.16.1.tar.bz2
-# 2016-12-20
-XBB_ISL_VERSION="0.18"
-XBB_ISL_FOLDER="isl-${XBB_ISL_VERSION}"
-XBB_ISL_ARCHIVE="${XBB_ISL_FOLDER}.tar.xz"
-XBB_ISL_URL="http://isl.gforge.inria.fr/${XBB_ISL_ARCHIVE}"
+# https://git-scm.com/
+# https://www.kernel.org/pub/software/scm/git/
+# 30-Oct-2017
+XBB_GIT_VERSION="2.15.0"
+XBB_GIT_FOLDER="git-${XBB_GIT_VERSION}"
+XBB_GIT_ARCHIVE="${XBB_GIT_FOLDER}.tar.xz"
+XBB_GIT_URL="https://www.kernel.org/pub/software/scm/git//${XBB_GIT_ARCHIVE}"
 
 
 # -----------------------------------------------------------------------------
@@ -597,7 +686,7 @@ function extract()
   tar xf "${ARCHIVE_NAME}"
 }
 
-function download_and_extract()
+function download()
 {
   local ARCHIVE_NAME="$1"
   local URL="$2"
@@ -608,7 +697,14 @@ function download_and_extract()
     curl --fail -L -o "${XBB_DOWNLOAD}/${ARCHIVE_NAME}.download" "${URL}"
     mv "${XBB_DOWNLOAD}/${ARCHIVE_NAME}.download" "${XBB_DOWNLOAD}/${ARCHIVE_NAME}"
   fi
+}
 
+function download_and_extract()
+{
+  local ARCHIVE_NAME="$1"
+  local URL="$2"
+
+  download "${ARCHIVE_NAME}" "${URL}"
   extract "${XBB_DOWNLOAD}/${ARCHIVE_NAME}"
 }
 
@@ -659,7 +755,7 @@ then
   pushd "${XBB_OPENSSL_FOLDER}"
   (
     # OpenSSL already passes optimization flags regardless of CFLAGS.
-		export CFLAGS=`echo "$STATICLIB_CFLAGS" | sed 's/-O2//'`
+		export CFLAGS=`echo "${STATICLIB_CFLAGS}" | sed 's/-O2//'`
 
     # Without the 'shared' option some further builds fail.
     ./config --prefix="${XBB}" \
@@ -780,6 +876,186 @@ then
   popd
 
   hash -r
+fi
+
+# -----------------------------------------------------------------------------
+# Libraries.
+
+if ! eval_bool "${SKIP_GMP}"
+then
+  echo
+  echo "Building gmp ${XBB_GMP_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GMP_ARCHIVE}" "${XBB_GMP_URL}"
+
+  pushd "${XBB_GMP_FOLDER}"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+if ! eval_bool "${SKIP_MPFR}"
+then
+  echo
+  echo "Building mpfr ${XBB_MPFR_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MPFR_ARCHIVE}" "${XBB_MPFR_URL}"
+
+  pushd "${XBB_MPFR_FOLDER}"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+if ! eval_bool "${SKIP_MPC}"
+then
+  echo
+  echo "Building mpc ${XBB_MPC_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MPC_ARCHIVE}" "${XBB_MPC_URL}"
+
+  pushd "${XBB_MPC_FOLDER}"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+if ! eval_bool "${SKIP_ISL}"
+then
+  echo
+  echo "Building isl ${XBB_ISL_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_ISL_ARCHIVE}" "${XBB_ISL_URL}"
+
+  pushd "$XBB_ISL_FOLDER"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+if ! eval_bool "${SKIP_NETTLE}"
+then
+  echo
+  echo "Building nettle ${XBB_NETTLE_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_NETTLE_ARCHIVE}" "${XBB_NETTLE_URL}"
+
+  pushd "$XBB_NETTLE_FOLDER"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS}"
+    # export CFLAGS="${SHLIB_CFLAGS}"
+    # export LDFLAGS="${SHLIB_LDFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install
+
+    echo
+    echo "${XBB}/lib64/pkgconfig/nettle.pc"
+    cat "${XBB}/lib64/pkgconfig/nettle.pc"
+
+    echo
+    echo "${XBB}/lib64/pkgconfig/hogweed.pc"
+    cat "${XBB}/lib64/pkgconfig/hogweed.pc"
+
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+if ! eval_bool "${SKIP_TASN1}"
+then
+  echo
+  echo "Building tasn1 ${XBB_TASN1_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_TASN1_ARCHIVE}" "${XBB_TASN1_URL}"
+
+  pushd "$XBB_TASN1_FOLDER"
+  (
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-logical-op -Wno-missing-prototypes"
+    # export CFLAGS="${SHLIB_CFLAGS}"
+    # export LDFLAGS="${SHLIB_LDFLAGS}"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install
+
+    echo
+    echo "${XBB}/lib/pkgconfig/libtasn1.pc"
+    cat "${XBB}/lib/pkgconfig/libtasn1.pc"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+fi
+
+# Requires libtasn1 & nettle.
+if ! eval_bool "${SKIP_GNUTLS}"
+then
+  echo
+  echo "Building gnutls ${XBB_GNUTLS_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GNUTLS_ARCHIVE}" "${XBB_GNUTLS_URL}"
+
+  pushd "$XBB_GNUTLS_FOLDER"
+  (
+    export PATH="${XBB}/bin":${PATH}
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-parentheses -Wno-bad-function-cast -Wno-unused-macros -Wno-bad-function-cast -Wno-unused-variable -Wno-pointer-sign -Wno-implicit-fallthrough -Wno-format-truncation -Wno-missing-prototypes -Wno-missing-declarations"
+    export CXXFLAGS="${STATICLIB_CXXFLAGS}"
+    # Without it 'error: libtasn1.h: No such file or directory'
+    export CPPFLAGS="-I${XBB}/include ${CPPFLAGS}"
+    export LDFLAGS="-L\"${XBB}/lib\" -L\"${XBB}/lib64\" ${LDFLAGS}"
+    export PKG_CONFIG_PATH="${XBB}/lib/pkgconfig:${XBB}/lib64/pkgconfig:${PKG_CONFIG_PATH}"
+    export PKG_CONFIG="${XBB}/bin/pkg-config-verbose"
+
+    ./configure --prefix="${XBB}" \
+      --disable-shared \
+      --enable-static \
+      --with-included-unistring \
+      --without-p11-kit
+
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+
+    echo
+    echo "${XBB}/lib/pkgconfig/gnutls.pc"
+    cat "${XBB}/lib/pkgconfig/gnutls.pc"
+
+    # Patch the gnutls.pc to add dependednt libs, to make wget build.
+    sed -i 's/^Libs:.*/Libs: -L${libdir} -L${exec_prefix}\/lib64 -lgnutls -ltasn1 -lnettle -lhogweed -lgmp/' "${XBB}/lib/pkgconfig/gnutls.pc"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
 fi
 
 # -----------------------------------------------------------------------------
@@ -966,6 +1242,57 @@ then
   hash -r
 fi
 
+if ! eval_bool "${SKIP_MAKE}"
+then
+  echo
+  echo "Building make ${XBB_MAKE_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MAKE_ARCHIVE}" "${XBB_MAKE_URL}"
+
+  pushd "${XBB_MAKE_FOLDER}"
+  (
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+fi
+
+# http://git.savannah.gnu.org/cgit/wget.git/tree/configure.ac
+
+# Requires gnutls.
+if ! eval_bool "${SKIP_WGET}"
+then
+  echo
+  echo "Building wget ${XBB_WGET_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_WGET_ARCHIVE}" "${XBB_WGET_URL}"
+
+  pushd "${XBB_WGET_FOLDER}"
+  (
+    export PATH="${XBB}/bin":${PATH}
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-implicit-function-declaration"
+    export CXXFLAGS="${STATICLIB_CXXFLAGS}"
+    # export CPPFLAGS="-I${XBB}/include ${CPPFLAGS}"
+    export LDFLAGS="-v ${LDFLAGS}"
+    export PKG_CONFIG_PATH="${XBB}/lib/pkgconfig:${XBB}/lib64/pkgconfig:${PKG_CONFIG_PATH}"
+    export PKG_CONFIG="${XBB}/bin/pkg-config-verbose"
+
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+fi
+
 # -----------------------------------------------------------------------------
 
 if ! eval_bool "${SKIP_PKG_CONFIG}"
@@ -1045,7 +1372,7 @@ fi
 if ! eval_bool "${SKIP_CMAKE}"
 then
   echo
-  echo "Installing cmake ${XBB_CMAKE_VERSION}"
+  echo "Installing cmake ${XBB_CMAKE_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_CMAKE_ARCHIVE}" "${XBB_CMAKE_URL}"
@@ -1070,7 +1397,7 @@ fi
 if ! eval_bool "${SKIP_PYTHON}"
 then
   echo
-  echo "Installing python ${XBB_PYTHON_VERSION}"
+  echo "Installing python ${XBB_PYTHON_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_PYTHON_ARCHIVE}" "${XBB_PYTHON_URL}"
@@ -1104,88 +1431,49 @@ then
   )
 fi
 
+if ! eval_bool "${SKIP_SCONS}"
+then
+  echo
+  echo "Installing scons ${XBB_SCONS_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_SCONS_ARCHIVE}" "${XBB_SCONS_URL}"
+
+  pushd "${XBB_SCONS_FOLDER}"
+  (
+    "${XBB}/bin/python" setup.py install --prefix="${XBB}"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+fi
+
+if ! eval_bool "${SKIP_GIT}"
+then
+  echo
+  echo "Installing git ${XBB_GIT_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GIT_ARCHIVE}" "${XBB_GIT_URL}"
+
+  pushd "${XBB_GIT_FOLDER}"
+  (
+    make configure 
+	  ./configure --prefix="${XBB}"
+	  make all -j${MAKE_CONCURRENCY}
+    make install
+
+    strip --strip-all "${XBB}/bin"/git "${XBB}/bin"/git-[rsu]*
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+fi
+
 # -----------------------------------------------------------------------------
-# GCC libraries.
-
-if ! eval_bool "${SKIP_GMP}"
-then
-  echo
-  echo "Building gmp ${XBB_GMP_VERSION}..."
-  cd "${XBB_BUILD}"
-
-  download_and_extract "${XBB_GMP_ARCHIVE}" "${XBB_GMP_URL}"
-
-  pushd "${XBB_GMP_FOLDER}"
-  (
-    export CFLAGS="${STATICLIB_CFLAGS}"
-
-    ./configure --prefix="${XBB}" --disable-shared --enable-static
-    make -j${MAKE_CONCURRENCY}
-    make install-strip
-  )
-  if [[ "$?" != 0 ]]; then false; fi
-  popd
-fi
-
-if ! eval_bool "${SKIP_MPFR}"
-then
-  echo
-  echo "Building mpfr ${XBB_MPFR_VERSION}..."
-  cd "${XBB_BUILD}"
-
-  download_and_extract "${XBB_MPFR_ARCHIVE}" "${XBB_MPFR_URL}"
-
-  pushd "${XBB_MPFR_FOLDER}"
-  (
-    export CFLAGS="${STATICLIB_CFLAGS}"
-
-    ./configure --prefix="${XBB}" --disable-shared --enable-static
-    make -j${MAKE_CONCURRENCY}
-    make install-strip
-  )
-  if [[ "$?" != 0 ]]; then false; fi
-  popd
-fi
-
-if ! eval_bool "${SKIP_MPC}"
-then
-  echo
-  echo "Building mpc ${XBB_MPC_VERSION}..."
-  cd "${XBB_BUILD}"
-
-  download_and_extract "${XBB_MPC_ARCHIVE}" "${XBB_MPC_URL}"
-
-  pushd "${XBB_MPC_FOLDER}"
-  (
-    export CFLAGS="${STATICLIB_CFLAGS}"
-
-    ./configure --prefix="${XBB}" --disable-shared --enable-static
-    make -j${MAKE_CONCURRENCY}
-    make install-strip
-  )
-  if [[ "$?" != 0 ]]; then false; fi
-  popd
-fi
-
-if ! eval_bool "${SKIP_ISL}"
-then
-  echo
-  echo "Building isl ${XBB_ISL_VERSION}..."
-  cd "${XBB_BUILD}"
-
-  download_and_extract "${XBB_ISL_ARCHIVE}" "${XBB_ISL_URL}"
-
-  pushd "$XBB_ISL_FOLDER"
-  (
-    export CFLAGS="${STATICLIB_CFLAGS}"
-
-    ./configure --prefix="${XBB}" --disable-shared --enable-static
-    make -j${MAKE_CONCURRENCY}
-    make install-strip
-  )
-  if [[ "$?" != 0 ]]; then false; fi
-  popd
-fi
 
 if ! eval_bool "${SKIP_BINUTILS}"
 then
@@ -1396,6 +1684,131 @@ fi
 
 # -----------------------------------------------------------------------------
 
+if ! eval_bool "${SKIP_TEXLIVE}"
+then
+  echo
+  echo "Installing texlive.."
+  cd "${XBB_BUILD}"
+
+  # https://www.tug.org/texlive/acquire-netinstall.html
+
+  XBB_TEXLIVE_FOLDER="install-tl"
+  XBB_TEXLIVE_ARCHIVE="install-tl-unx.tar.gz"
+  XBB_TEXLIVE_URL="ftp://tug.org/historic/systems/texlive/2016/${XBB_TEXLIVE_ARCHIVE}"
+  XBB_TEXLIVE_PREFIX="/opt/texlive"
+
+  XBB_TEXLIVE_REPO_URL="ftp://tug.org/historic/systems/texlive//2016/tlnet-final"
+
+  download "${XBB_TEXLIVE_ARCHIVE}" "${XBB_TEXLIVE_URL}"
+
+# Create the texlive.profile used to automate the install.
+# These definitions are specific to TeX Live 2016.
+tmp_profile=$(mktemp)
+
+# Note: __EOF__ is not quoted to allow local substitutions.
+cat <<__EOF__ >> "${tmp_profile}"
+# texlive.profile, copied from MacTex
+TEXDIR ${XBB_TEXLIVE_PREFIX}
+TEXMFCONFIG ~/.texlive/texmf-config
+TEXMFHOME ~/texmf
+TEXMFLOCAL ${XBB_TEXLIVE_PREFIX}/texmf-local
+TEXMFSYSCONFIG ${XBB_TEXLIVE_PREFIX}/texmf-config
+TEXMFSYSVAR ${XBB_TEXLIVE_PREFIX}/texmf-var
+TEXMFVAR ~/.texlive/texmf-var
+# binary_universal-darwin 1
+binary_universal-darwin 0
+binary_x86_64-darwin 1
+collection-basic 1
+collection-bibtexextra 1
+collection-binextra 1
+collection-context 1
+collection-fontsextra 1
+collection-fontsrecommended 1
+collection-fontutils 1
+collection-formatsextra 1
+collection-games 1
+collection-genericextra 1
+collection-genericrecommended 1
+collection-htmlxml 1
+collection-humanities 1
+collection-langafrican 1
+collection-langarabic 1
+collection-langchinese 1
+collection-langcjk 1
+collection-langcyrillic 1
+collection-langczechslovak 1
+collection-langenglish 1
+collection-langeuropean 1
+collection-langfrench 1
+collection-langgerman 1
+collection-langgreek 1
+collection-langindic 1
+collection-langitalian 1
+collection-langjapanese 1
+collection-langkorean 1
+collection-langother 1
+collection-langpolish 1
+collection-langportuguese 1
+collection-langspanish 1
+collection-latex 1
+collection-latexextra 1
+collection-latexrecommended 1
+collection-luatex 1
+collection-mathextra 1
+collection-metapost 1
+collection-music 1
+collection-omega 1
+collection-pictures 1
+collection-plainextra 1
+collection-pstricks 1
+collection-publishers 1
+collection-science 1
+collection-texworks 1
+collection-xetex 1
+in_place 0
+option_adjustrepo 0
+option_autobackup 1
+option_backupdir tlpkg/backups
+option_desktop_integration 1
+option_doc 1
+option_file_assocs 1
+option_fmt 1
+option_letter 1
+option_menu_integration 1
+option_path 0
+option_post_code 1
+option_src 1
+option_sys_bin /usr/local/bin
+option_sys_info /usr/local/share/info
+option_sys_man /usr/local/share/man
+option_w32_multi_user 1
+option_write18_restricted 1
+portable 0
+__EOF__
+
+  mkdir -p "${XBB_TEXLIVE_FOLDER}"
+  pushd "${XBB_TEXLIVE_FOLDER}"
+  (
+    tar x -v --strip-components 1 -f "${XBB_DOWNLOAD}/${XBB_TEXLIVE_ARCHIVE}"
+
+    ls -lL
+
+    mkdir -p "${XBB_TEXLIVE_PREFIX}"
+
+    export PATH="${XBB}/bin":${PATH}
+
+    "./install-tl" \
+      -repository "${XBB_TEXLIVE_REPO_URL}" \
+      -no-gui \
+      -lang en \
+      -profile "${tmp_profile}"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+fi
 
 # rm -rf "${XBB_DOWNLOAD}"
 # rm -rf "${XBB_BOOTSTARP}"
