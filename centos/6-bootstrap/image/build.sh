@@ -53,9 +53,11 @@ mkdir -p "${XBB_BUILD}"
 # Note: __EOF__ is quoted to prevent substitutions here.
 cat <<'__EOF__' >> "${XBB}/xbb.sh"
 
+export XBB_FOLDER="/opt/xbb-bootstrap"
+
 function xbb_activate_param()
 {
-  PREFIX_=${PREFIX_:-${XBB}}
+  PREFIX_=${PREFIX_:-${XBB_FOLDER}}
 
   # Do not include -I... here, use CPPFLAGS.
   EXTRA_CFLAGS_=${EXTRA_CFLAGS_:-""}
@@ -75,35 +77,56 @@ function xbb_activate_param()
 
   EXTRA_LDPATHFLAGS_=${EXTRA_LDPATHFLAGS_:-""}
 
-  export PATH="${PREFIX_}/bin":${PATH}
+  export PATH="${PREFIX_}/bin:${PATH}"
   export C_INCLUDE_PATH="${PREFIX_}/include"
   export CPLUS_INCLUDE_PATH="${PREFIX_}/include"
   export LIBRARY_PATH="${PREFIX_}/lib"
-  export PKG_CONFIG_PATH="${PREFIX_}/lib/pkgconfig":/usr/lib/pkgconfig
+  export PKG_CONFIG_PATH="${PREFIX_}/lib/pkgconfig:/usr/lib/pkgconfig"
   export LD_LIBRARY_PATH="${PREFIX_}/lib"
 
-  export CPPFLAGS=-I"${PREFIX_}/include"
-  export LDPATHFLAGS="-L\"${PREFIX_}/lib\" ${EXTRA_LDPATHFLAGS_}"
+  export CPPFLAGS="-I${PREFIX_}/include"
+  export LDPATHFLAGS="-L${PREFIX_}/lib ${EXTRA_LDPATHFLAGS_}"
 
   # Do not include -I... here, use CPPFLAGS.
-  local MINIMAL_CFLAGS_="-g -O2"
+  local COMMON_CFLAGS_=${COMMON_CFLAGS_:-"-g -O2"}
+  local COMMON_CXXFLAGS_=${COMMON_CXXFLAGS_:-${COMMON_CFLAGS_}}
 
-  export CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CFLAGS_}"
-	export CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_CXXFLAGS_}"
+  export CFLAGS="${COMMON_CFLAGS_} ${EXTRA_CFLAGS_}"
+	export CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_CXXFLAGS_}"
   export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
-	export STATICLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
-	export STATICLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
+	export STATICLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
+	export STATICLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
 
-	export SHLIB_CFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
-	export SHLIB_CXXFLAGS="${MINIMAL_CFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
+	export SHLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
+	export SHLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
   export SHLIB_LDFLAGS="${LDPATHFLAGS} ${EXTRA_SHLIB_LDFLAGS_}"
+
+  echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
+  echo
+  echo PATH=${PATH}
+  echo
+  echo CFLAGS=${CFLAGS}
+  echo CXXFLAGS=${CXXFLAGS}
+  echo LDFLAGS=${LDFLAGS}
+  echo
+  echo STATICLIB_CFLAGS=${STATICLIB_CFLAGS}
+  echo STATICLIB_CXXFLAGS=${STATICLIB_CXXFLAGS}
+  echo
+  echo SHLIB_CFLAGS=${SHLIB_CFLAGS}
+  echo SHLIB_CXXFLAGS=${SHLIB_CXXFLAGS}
+  echo SHLIB_LDFLAGS=${SHLIB_LDFLAGS}
+  echo
+  echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+  echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 }
 
 xbb_activate_bootstrap()
 {
   PREFIX_="${XBB}" 
   EXTRA_LDFLAGS_="-Wl,-rpath -Wl,\"${XBB}/lib\"" 
+  EXTRA_SHLIB_CFLAGS_="-fPIC"
+
   xbb_activate_param
 }
 
@@ -115,6 +138,8 @@ xbb_activate_bootstrap_static()
   EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections -Wl,-rpath -Wl,\"${XBB}/lib\""
   EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections"
   EXTRA_STATICLIB_CXXFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_SHLIB_CFLAGS_="-fvisibility=hidden -fPIC"
+  EXTRA_SHLIB_LDFLAGS_="-static-libstdc++"
 
   xbb_activate_param
 }
@@ -145,6 +170,7 @@ source "${XBB}/xbb.sh"
 # SKIP_PATCH=true
 # SKIP_DIFUTILS=true
 # SKIP_BISON=true
+# SKIP_MAKE=true
 
 # SKIP_PKG_CONFIG=true
 # SKIP_FLEX=true
@@ -152,6 +178,7 @@ source "${XBB}/xbb.sh"
 
 # SKIP_CMAKE=true
 # SKIP_PYTHON=true
+# SKIP_SCONS=true
 
 # SKIP_GMP=true
 # SKIP_MPFR=true
@@ -184,6 +211,7 @@ SKIP_GETTEXT=${SKIP_GETTEXT:-$SKIP_ALL}
 SKIP_PATCH=${SKIP_PATCH:-$SKIP_ALL}
 SKIP_DIFFUTILS=${SKIP_DIFFUTILS:-$SKIP_ALL}
 SKIP_BISON=${SKIP_BISON:-$SKIP_ALL}
+SKIP_MAKE=${SKIP_MAKE:-$SKIP_ALL}
 
 SKIP_PKG_CONFIG=${SKIP_PKG_CONFIG:-$SKIP_ALL}
 SKIP_FLEX=${SKIP_FLEX:-$SKIP_ALL}
@@ -191,6 +219,7 @@ SKIP_PERL=${SKIP_PERL:-$SKIP_ALL}
 
 SKIP_CMAKE=${SKIP_CMAKE:-$SKIP_ALL}
 SKIP_PYTHON=${SKIP_PYTHON:-$SKIP_ALL}
+SKIP_SCONS=${SKIP_SCONS:-$SKIP_ALL}
 
 SKIP_GMP=${SKIP_GMP:-$SKIP_ALL}
 SKIP_MPFR=${SKIP_MPFR:-$SKIP_ALL}
@@ -219,6 +248,7 @@ SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
 # SKIP_PATCH=false
 # SKIP_DIFUTILS=false
 # SKIP_BISON=false
+# SKIP_MAKE=false
 
 # SKIP_PKG_CONFIG=false
 # SKIP_FLEX=false
@@ -226,6 +256,7 @@ SKIP_GCC=${SKIP_GCC:-$SKIP_ALL}
 
 # SKIP_CMAKE=false
 # SKIP_PYTHON=false
+# SKIP_SCONS=false
 
 # SKIP_GMP=false
 # SKIP_MPFR=false
@@ -368,6 +399,15 @@ XBB_BISON_FOLDER="bison-${XBB_BISON_VERSION}"
 XBB_BISON_ARCHIVE="${XBB_BISON_FOLDER}.tar.xz"
 XBB_BISON_URL="https://ftp.gnu.org/gnu/bison/${XBB_BISON_ARCHIVE}"
 
+# https://www.gnu.org/software/make/
+# https://ftp.gnu.org/gnu/make/
+# 2016-06-10
+XBB_MAKE_VERSION="4.2.1"
+XBB_MAKE_FOLDER="make-${XBB_MAKE_VERSION}"
+# Only .bz2 available.
+XBB_MAKE_ARCHIVE="${XBB_MAKE_FOLDER}.tar.bz2"
+XBB_MAKE_URL="https://ftp.gnu.org/gnu/make/${XBB_MAKE_ARCHIVE}"
+
 # -----------------------------------------------------------------------------
 # Build third party tools.
 
@@ -418,6 +458,14 @@ XBB_PYTHON_VERSION="2.7.14"
 XBB_PYTHON_FOLDER="Python-${XBB_PYTHON_VERSION}"
 XBB_PYTHON_ARCHIVE="${XBB_PYTHON_FOLDER}.tar.xz"
 XBB_PYTHON_URL="https://www.python.org/ftp/python/${XBB_PYTHON_VERSION}/${XBB_PYTHON_ARCHIVE}"
+
+# http://scons.org
+# https://sourceforge.net/projects/scons/files/scons/3.0.1/
+# 2017-09-16
+XBB_SCONS_VERSION="3.0.1"
+XBB_SCONS_FOLDER="scons-${XBB_SCONS_VERSION}"
+XBB_SCONS_ARCHIVE="${XBB_SCONS_FOLDER}.tar.gz"
+XBB_SCONS_URL="https://sourceforge.net/projects/scons/files/scons/${XBB_SCONS_VERSION}/${XBB_SCONS_ARCHIVE}"
 
 # https://gmplib.org
 # https://gmplib.org/download/gmp/
@@ -547,7 +595,9 @@ function eval_bool()
 # Generally build only the static versions of the libraries.
 # (the exception are libcrypto.so libcurl.so libssl.so)
 
-if ! eval_bool "${SKIP_ZLIB}"; then
+if ! eval_bool "${SKIP_ZLIB}"
+then
+  echo
   echo "Building zlib ${XBB_ZLIB_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -559,6 +609,7 @@ if ! eval_bool "${SKIP_ZLIB}"; then
 
     # Better leave both static and dynamic, some apps fail without the expected one.
     ./configure --prefix="${XBB}"
+
     make -j${MAKE_CONCURRENCY}
     make install
 
@@ -573,6 +624,7 @@ fi
 
 if ! eval_bool "${SKIP_XZ}"
 then
+  echo
   echo "Building xz ${XBB_XZ_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -583,6 +635,7 @@ then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -595,6 +648,7 @@ fi
 # Requires xz.
 if ! eval_bool "${SKIP_TAR}"
 then
+  echo
   echo "Building tar ${XBB_TAR_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -608,6 +662,7 @@ then
     export FORCE_UNSAFE_CONFIGURE=1
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -621,6 +676,7 @@ fi
 
 if ! eval_bool "${SKIP_OPENSSL}"
 then
+  echo
   echo "Building openssl ${XBB_OPENSSL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -634,6 +690,7 @@ then
     ./config --prefix="${XBB}" \
       --openssldir="${XBB}/openssl" \
       threads zlib shared
+    
     make
     make install_sw
 
@@ -671,6 +728,7 @@ fi
 # Requires openssl & zlib.
 if ! eval_bool "${SKIP_CURL}"
 then
+  echo
   echo "Building curl ${XBB_CURL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -686,6 +744,7 @@ then
       --disable-static --disable-debug \
       --with-ssl --enable-optimize --disable-manual \
       --with-ca-bundle=/etc/pki/tls/certs/ca-bundle.crt
+    
     make -j${MAKE_CONCURRENCY}
     make install
 
@@ -707,6 +766,7 @@ fi
 
 if ! eval_bool "${SKIP_M4}"
 then
+  echo
   echo "Building m4 ${XBB_M4_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -717,6 +777,7 @@ then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -728,6 +789,7 @@ fi
 
 if ! eval_bool "${SKIP_GAWK}"
 then
+  echo
   echo "Building gawk ${XBB_GAWK_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -738,6 +800,7 @@ then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -747,7 +810,9 @@ then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_AUTOCONF}"; then
+if ! eval_bool "${SKIP_AUTOCONF}"
+then
+  echo
   echo "Building autoconf ${XBB_AUTOCONF_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -758,6 +823,7 @@ if ! eval_bool "${SKIP_AUTOCONF}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -767,7 +833,9 @@ if ! eval_bool "${SKIP_AUTOCONF}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_AUTOMAKE}"; then
+if ! eval_bool "${SKIP_AUTOMAKE}"
+then
+  echo
   echo "Building automake ${XBB_AUTOMAKE_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -778,6 +846,7 @@ if ! eval_bool "${SKIP_AUTOMAKE}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -787,7 +856,9 @@ if ! eval_bool "${SKIP_AUTOMAKE}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_LIBTOOL}"; then
+if ! eval_bool "${SKIP_LIBTOOL}"
+then
+  echo
   echo "Building libtool ${XBB_LIBTOOL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -798,6 +869,7 @@ if ! eval_bool "${SKIP_LIBTOOL}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -807,7 +879,9 @@ if ! eval_bool "${SKIP_LIBTOOL}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_GETTEXT}"; then
+if ! eval_bool "${SKIP_GETTEXT}"
+then
+  echo
   echo "Building gettext ${XBB_GETTEXT_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -818,6 +892,7 @@ if ! eval_bool "${SKIP_GETTEXT}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -827,7 +902,9 @@ if ! eval_bool "${SKIP_GETTEXT}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PATCH}"; then
+if ! eval_bool "${SKIP_PATCH}"
+then
+  echo
   echo "Building patch ${XBB_PATCH_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -838,6 +915,7 @@ if ! eval_bool "${SKIP_PATCH}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -847,7 +925,9 @@ if ! eval_bool "${SKIP_PATCH}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_DIFFUTILS}"; then
+if ! eval_bool "${SKIP_DIFFUTILS}"
+then
+  echo
   echo "Building diffutils ${XBB_DIFFUTILS_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -867,7 +947,9 @@ if ! eval_bool "${SKIP_DIFFUTILS}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_BISON}"; then
+if ! eval_bool "${SKIP_BISON}"
+then
+  echo
   echo "Building bison ${XBB_BISON_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -878,6 +960,28 @@ if ! eval_bool "${SKIP_BISON}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+fi
+
+if ! eval_bool "${SKIP_MAKE}"
+then
+  echo
+  echo "Building make ${XBB_MAKE_VERSION}..."
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_MAKE_ARCHIVE}" "${XBB_MAKE_URL}"
+
+  pushd "${XBB_MAKE_FOLDER}"
+  (
+    ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -889,7 +993,9 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if ! eval_bool "${SKIP_PKG_CONFIG}"; then
+if ! eval_bool "${SKIP_PKG_CONFIG}"
+then
+  echo
   echo "Building pkg-config ${XBB_PKG_CONFIG_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -900,6 +1006,7 @@ if ! eval_bool "${SKIP_PKG_CONFIG}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --with-internal-glib
+    
     rm -f "${XBB}/bin"/*pkg-config
     make -j${MAKE_CONCURRENCY} 
     make install-strip
@@ -911,7 +1018,9 @@ if ! eval_bool "${SKIP_PKG_CONFIG}"; then
 fi
 
 # Requires gettext.
-if ! eval_bool "${SKIP_FLEX}"; then
+if ! eval_bool "${SKIP_FLEX}"
+then
+  echo
   echo "Building flex ${XBB_FLEX_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -923,6 +1032,7 @@ if ! eval_bool "${SKIP_FLEX}"; then
 
     ./autogen.sh
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -932,7 +1042,9 @@ if ! eval_bool "${SKIP_FLEX}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PERL}"; then
+if ! eval_bool "${SKIP_PERL}"
+then
+  echo
   echo "Building perl ${XBB_PERL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -956,8 +1068,10 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if ! eval_bool "${SKIP_CMAKE}"; then
-  echo "Installing cmake ${XBB_CMAKE_VERSION}"
+if ! eval_bool "${SKIP_CMAKE}"
+then
+  echo
+  echo "Installing cmake ${XBB_CMAKE_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_CMAKE_ARCHIVE}" "${XBB_CMAKE_URL}"
@@ -971,6 +1085,7 @@ if ! eval_bool "${SKIP_CMAKE}"; then
       --parallel=${MAKE_CONCURRENCY} \
       --no-qt-gui \
       --no-system-libs 
+    
     make -j${MAKE_CONCURRENCY}
     make install
 
@@ -982,8 +1097,10 @@ if ! eval_bool "${SKIP_CMAKE}"; then
   hash -r
 fi
 
-if ! eval_bool "${SKIP_PYTHON}"; then
-  echo "Installing python ${XBB_PYTHON_VERSION}"
+if ! eval_bool "${SKIP_PYTHON}"
+then
+  echo
+  echo "Installing python ${XBB_PYTHON_VERSION}..."
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_PYTHON_ARCHIVE}" "${XBB_PYTHON_URL}"
@@ -996,6 +1113,7 @@ if ! eval_bool "${SKIP_PYTHON}"; then
     # https://github.com/python/cpython/tree/2.7
     ./configure --prefix="${XBB}" \
       --with-ssl
+    
     make -j${MAKE_CONCURRENCY} 
     make install
 
@@ -1011,6 +1129,7 @@ if ! eval_bool "${SKIP_PYTHON}"; then
     xbb_activate_bootstrap
 
     # Install setuptools and pip. Be sure the new version is used.
+    echo
     echo "Installing setuptools and pip..."
     curl -OL --fail https://bootstrap.pypa.io/get-pip.py
     python get-pip.py --prefix="${XBB}"
@@ -1020,9 +1139,31 @@ if ! eval_bool "${SKIP_PYTHON}"; then
   )
 fi
 
-# -----------------------------------------------------------------------------
+if ! eval_bool "${SKIP_SCONS}"
+then
+  echo
+  echo "Installing scons ${XBB_SCONS_VERSION}..."
+  cd "${XBB_BUILD}"
 
-if ! eval_bool "${SKIP_GMP}"; then
+  download_and_extract "${XBB_SCONS_ARCHIVE}" "${XBB_SCONS_URL}"
+
+  pushd "${XBB_SCONS_FOLDER}"
+  (
+    "${XBB}/bin/python" setup.py install --prefix="${XBB}"
+  )
+  if [[ "$?" != 0 ]]; then false; fi
+  popd
+
+  hash -r
+
+fi
+
+# -----------------------------------------------------------------------------
+# Libraries.
+
+if ! eval_bool "${SKIP_GMP}"
+then
+  echo
   echo "Building gmp ${XBB_GMP_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1031,8 +1172,10 @@ if ! eval_bool "${SKIP_GMP}"; then
   pushd "${XBB_GMP_FOLDER}"
   (
     xbb_activate_bootstrap
+    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1040,7 +1183,9 @@ if ! eval_bool "${SKIP_GMP}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_MPFR}"; then
+if ! eval_bool "${SKIP_MPFR}"
+then
+  echo
   echo "Building mpfr ${XBB_MPFR_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1048,9 +1193,11 @@ if ! eval_bool "${SKIP_MPFR}"; then
 
   pushd "${XBB_MPFR_FOLDER}"
   (
-    xbb_activate_bootstrap "$XBB"
+    xbb_activate_bootstrap
+    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1058,7 +1205,9 @@ if ! eval_bool "${SKIP_MPFR}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_MPC}"; then
+if ! eval_bool "${SKIP_MPC}"
+then
+  echo
   echo "Building mpc ${XBB_MPC_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1067,8 +1216,10 @@ if ! eval_bool "${SKIP_MPC}"; then
   pushd "${XBB_MPC_FOLDER}"
   (
     xbb_activate_bootstrap
+    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1076,7 +1227,9 @@ if ! eval_bool "${SKIP_MPC}"; then
   popd
 fi
 
-if ! eval_bool "${SKIP_ISL}"; then
+if ! eval_bool "${SKIP_ISL}"
+then
+  echo
   echo "Building isl ${XBB_ISL_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1085,8 +1238,10 @@ if ! eval_bool "${SKIP_ISL}"; then
   pushd "$XBB_ISL_FOLDER"
   (
     xbb_activate_bootstrap
+    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1097,7 +1252,9 @@ fi
 # -----------------------------------------------------------------------------
 
 # Requires gmp, mpfr, mpc, isl.
-if ! eval_bool "${SKIP_BINUTILS}"; then
+if ! eval_bool "${SKIP_BINUTILS}"
+then
+  echo
   echo "Building binutils ${XBB_BINUTILS_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1108,6 +1265,7 @@ if ! eval_bool "${SKIP_BINUTILS}"; then
     xbb_activate_bootstrap
 
     ./configure --prefix="${XBB}" --disable-shared --enable-static
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
@@ -1122,6 +1280,7 @@ fi
 # Requires gmp, mpfr, mpc, isl.
 if ! eval_bool "${SKIP_GCC}"
 then
+  echo
   echo "Building gcc ${XBB_GCC_VERSION}..."
   cd "${XBB_BUILD}"
 
@@ -1137,6 +1296,7 @@ then
     "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" --prefix="${XBB}" \
       --enable-languages=c,c++ \
       --disable-multilib
+    
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )

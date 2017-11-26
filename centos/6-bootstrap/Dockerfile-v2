@@ -1,4 +1,4 @@
-FROM ilegeul/centos:6-bootstrap
+FROM ilegeul/centos:6-bootstrap-v1
 MAINTAINER Liviu Ionescu <ilg@livius.net>
 WORKDIR /root
 

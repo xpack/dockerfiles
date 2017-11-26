@@ -24,29 +24,29 @@ To create the Docker image locally, use:
 
 ```console
 $ cd ...
-$ docker build --tag "ilegeul/centos:6-bootstrap" -f Dockerfile .
+$ docker build --squash --tag "ilegeul/centos:6-bootstrap-v1" -f Dockerfile-v1 .
 ```
 
 On macOS, to prevent entering sleep, use:
 
 ```console
-$ caffeinate docker build --tag "ilegeul/centos:6-bootstrap" -f Dockerfile .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-bootstrap-v1" -f Dockerfile-v1 .
 ```
 
 To test the image:
 
 ```console
-$ docker run --interactive --tty ilegeul/centos:6-bootstrap
+$ docker run --interactive --tty ilegeul/centos:6-bootstrap-v1
 ```
 
 To create a second version:
 
 ```console
-$ caffeinate docker build --tag "ilegeul/centos:6-bootstrap-v2" -f Dockerfile-v2 .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-bootstrap-v2" -f Dockerfile-v2 .
 ```
 
 To publish, use:
 
 ```console
-$ docker push "ilegeul/centos:6-bootstrap"
+$ docker push "ilegeul/centos:6-bootstrap-v1"
 ```
