@@ -342,22 +342,22 @@ SKIP_TEXLIVE=${SKIP_TEXLIVE:-$SKIP_ALL}
 # SKIP_MPFR=false
 # SKIP_MPC=false
 # SKIP_ISL=false
- SKIP_NETTLE=false
- SKIP_TASN1=false
- SKIP_GNUTLS=false
+# SKIP_NETTLE=false
+# SKIP_TASN1=false
+# SKIP_GNUTLS=false
 
- SKIP_M4=false
- SKIP_GAWK=false
- SKIP_AUTOCONF=false
- SKIP_AUTOMAKE=false
- SKIP_LIBTOOL=false
- SKIP_GETTEXT=false
- SKIP_PATCH=false
- SKIP_DIFUTILS=false
- SKIP_BISON=false
- SKIP_MAKE=false
- SKIP_WGET=false
- SKIP_TEXINFO=false
+# SKIP_M4=false
+# SKIP_GAWK=false
+# SKIP_AUTOCONF=false
+# SKIP_AUTOMAKE=false
+# SKIP_LIBTOOL=false
+# SKIP_GETTEXT=false
+# SKIP_PATCH=false
+# SKIP_DIFUTILS=false
+# SKIP_BISON=false
+# SKIP_MAKE=false
+# SKIP_WGET=false
+# SKIP_TEXINFO=false
 
 # SKIP_PKG_CONFIG=false
 # SKIP_PATCHELF=false
@@ -860,7 +860,7 @@ then
 
   pushd "$XBB_NETTLE_FOLDER"
   (
-    export CFLAGS="${STATICLIB_CFLAGS} -Wno-implicit-fallthrough="
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-implicit-fallthrough"
     # export CFLAGS="${SHLIB_CFLAGS}"
     # export LDFLAGS="${SHLIB_LDFLAGS}"
 
@@ -869,7 +869,7 @@ then
       --prefix="${XBB}" \
       --disable-shared \
       --enable-static
-    
+
     make -j${MAKE_CONCURRENCY}
     make install
 
@@ -903,7 +903,7 @@ then
 
   pushd "$XBB_TASN1_FOLDER"
   (
-    export CFLAGS="${STATICLIB_CFLAGS} -Wno-logical-op -Wno-missing-prototypes -Wno-implicit-fallthrough="
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-logical-op -Wno-missing-prototypes -Wno-implicit-fallthrough"
     # export CFLAGS="${SHLIB_CFLAGS}"
     # export LDFLAGS="${SHLIB_LDFLAGS}"
 
@@ -944,7 +944,7 @@ then
   pushd "$XBB_GNUTLS_FOLDER"
   (
     export PATH="${XBB}"/bin:${PATH}
-    export CFLAGS="${STATICLIB_CFLAGS} -Wno-parentheses -Wno-bad-function-cast -Wno-unused-macros -Wno-bad-function-cast -Wno-unused-variable -Wno-pointer-sign -Wno-implicit-fallthrough -Wno-format-truncation= -Wno-missing-prototypes -Wno-missing-declarations -Wno-shadow -Wno-sign-compare"
+    export CFLAGS="${STATICLIB_CFLAGS} -Wno-parentheses -Wno-bad-function-cast -Wno-unused-macros -Wno-bad-function-cast -Wno-unused-variable -Wno-pointer-sign -Wno-implicit-fallthrough -Wno-format-truncation -Wno-missing-prototypes -Wno-missing-declarations -Wno-shadow -Wno-sign-compare"
     export CXXFLAGS="${STATICLIB_CXXFLAGS}"
     # Without it 'error: libtasn1.h: No such file or directory'
     export CPPFLAGS="-I${XBB}/include ${CPPFLAGS}"
