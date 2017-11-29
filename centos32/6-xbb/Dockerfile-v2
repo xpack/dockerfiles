@@ -1,0 +1,10 @@
+FROM ilegeul/centos32:6-xbb-v1
+MAINTAINER Liviu Ionescu <ilg@livius.net>
+ENTRYPOINT ["linux32"]
+WORKDIR /root
+
+ADD image /xbb-input
+RUN linux32 time bash -x /xbb-input/build.sh
+
+CMD ["/bin/bash"]
+
