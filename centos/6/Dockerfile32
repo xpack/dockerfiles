@@ -1,0 +1,8 @@
+FROM scratch
+MAINTAINER Liviu Ionescu <ilg@livius.net>
+ENTRYPOINT ["linux32"]
+
+ADD rootfs32.tar.xz /
+RUN linux32 yum -y update
+
+CMD ["/bin/bash"]
