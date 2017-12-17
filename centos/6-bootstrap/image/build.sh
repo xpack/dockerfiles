@@ -22,14 +22,21 @@ IFS=$'\n\t'
 # Script to build a Docker image with a bootstrap system, used to later build  
 # the final xPack Build Box (xbb).
 #
-# To finally get access to the very latest tools versions it is required to   
-# do it in two steps, since the orginal CentOS 6 is too old to compile some 
-# of the modern sources. So, in the first step are compiled the most recent
-# versions allowed by CentOS 6; being based on GCC 7.2, they shold be enough
-# for a few years to come. With them, in the second step are compiled the
-# latest versions.
+# Since the orginal CentOS 6 is too old to compile some of the modern
+# sources, two steps are required. In the first step are compiled the most
+# recent versions allowed by CentOS 6; being based on GCC 7.2, they should 
+# be enough for a few years to come. With them, in the second step, are 
+# compiled the very latest versions.
 
 # Credits: Inspired by Holy Build Box build script.
+
+# Note: the initial approach was to disable the creation of all shared 
+# libraries and try to build everything as static. Unfortunately some
+# of the tools are not able to do this correctly, and the final version
+# was simplified to the defaults, which generally include both shared and
+# static versions for the libraries. The drawback is that, in addition to 
+# PATH, for the programs to start, the LD_LIBRARY_PATH must also be set 
+# correctly.
 
 XBB_INPUT="/xbb-input"
 XBB_DOWNLOAD="/tmp/xbb-download"
@@ -60,7 +67,7 @@ then
   BITS="32"
 fi
 
-build=${UNAME_ARCH}-linux-gnu
+BUILD=${UNAME_ARCH}-linux-gnu
 
 # -----------------------------------------------------------------------------
 
@@ -85,24 +92,17 @@ function xbb_activate_param()
 
   EXTRA_LDFLAGS_=${EXTRA_LDFLAGS_:-""}
 
-  # Do not include -I... here, use CPPFLAGS.
-  EXTRA_STATICLIB_CFLAGS_=${EXTRA_STATICLIB_CFLAGS_:-""}
-  EXTRA_STATICLIB_CXXFLAGS_=${EXTRA_STATICLIB_CXXFLAGS_:-${EXTRA_STATICLIB_CFLAGS_}}
-
-  # Do not include -I... here, use CPPFLAGS.
-  EXTRA_SHLIB_CFLAGS_=${EXTRA_SHLIB_CFLAGS_:-""}
-  EXTRA_SHLIB_CXXFLAGS_=${EXTRA_SHLIB_CXXFLAGS_:-${EXTRA_SHLIB_CFLAGS_}}
-  
-  EXTRA_SHLIB_LDFLAGS_=${EXTRA_SHLIB_LDFLAGS_:-""}
-
   EXTRA_LDPATHFLAGS_=${EXTRA_LDPATHFLAGS_:-""}
+
+  PATH=${PATH:-""}
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
 
   export PATH="${PREFIX_}/bin:${PATH}"
   export C_INCLUDE_PATH="${PREFIX_}/include"
   export CPLUS_INCLUDE_PATH="${PREFIX_}/include"
   export LIBRARY_PATH="${PREFIX_}/lib"
   export PKG_CONFIG_PATH="${PREFIX_}/lib/pkgconfig:/usr/lib/pkgconfig"
-  export LD_LIBRARY_PATH="${PREFIX_}/lib"
+  export LD_LIBRARY_PATH="${PREFIX_}/lib:${LD_LIBRARY_PATH}"
 
   export CPPFLAGS="-I${PREFIX_}/include"
   export LDPATHFLAGS="-L${PREFIX_}/lib ${EXTRA_LDPATHFLAGS_}"
@@ -115,13 +115,6 @@ function xbb_activate_param()
 	export CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_CXXFLAGS_}"
   export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
-	export STATICLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_STATICLIB_CFLAGS_}"
-	export STATICLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_STATICLIB_CXXFLAGS_}"
-
-	export SHLIB_CFLAGS="${COMMON_CFLAGS_} ${EXTRA_SHLIB_CFLAGS_}"
-	export SHLIB_CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_SHLIB_CXXFLAGS_}"
-  export SHLIB_LDFLAGS="${LDPATHFLAGS} ${EXTRA_SHLIB_LDFLAGS_}"
-
   echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
   echo
   echo PATH=${PATH}
@@ -131,36 +124,28 @@ function xbb_activate_param()
   echo CPPFLAGS=${CPPFLAGS}
   echo LDFLAGS=${LDFLAGS}
   echo
-  echo STATICLIB_CFLAGS=${STATICLIB_CFLAGS}
-  echo STATICLIB_CXXFLAGS=${STATICLIB_CXXFLAGS}
-  echo
-  echo SHLIB_CFLAGS=${SHLIB_CFLAGS}
-  echo SHLIB_CXXFLAGS=${SHLIB_CXXFLAGS}
-  echo SHLIB_LDFLAGS=${SHLIB_LDFLAGS}
-  echo
   echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 }
 
-xbb_activate_bootstrap()
+function xbb_activate_bootstrap()
 {
-  PREFIX_="${XBB}" 
-  EXTRA_LDFLAGS_="-Wl,-rpath -Wl,\"${XBB}/lib\"" 
-  EXTRA_SHLIB_CFLAGS_="-fPIC"
+  PREFIX_="${XBB}"
+
+  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_LDFLAGS_="-Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB}/lib\"" 
 
   xbb_activate_param
 }
 
-xbb_activate_bootstrap_static()
+function xbb_activate_bootstrap_static()
 {
   PREFIX_="${XBB}"
-  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections "
-  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections "
-  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections -Wl,-rpath -Wl,\"${XBB}/lib\""
-  EXTRA_STATICLIB_CFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_STATICLIB_CXXFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_SHLIB_CFLAGS_="-fvisibility=hidden -fPIC"
-  EXTRA_SHLIB_LDFLAGS_="-static-libstdc++"
+
+  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections"
+  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections -Wl,-rpath -Wl,\"${XBB}/lib\"" 
 
   xbb_activate_param
 }
@@ -188,6 +173,8 @@ __EOF__
 # The above marker must start in the first column.
 
 chmod +x "${XBB}"/bin/pkg-config-verbose
+
+export PKG_CONFIG="${XBB}/bin/pkg-config-verbose"
 
 # -----------------------------------------------------------------------------
 # Common functions.
@@ -242,8 +229,8 @@ function eval_bool()
 
 # -----------------------------------------------------------------------------
 
-function do_zlib() {
-
+function do_zlib() 
+{
   # http://zlib.net
   # http://zlib.net/fossils/
   # 2017-01-15
@@ -260,7 +247,8 @@ function do_zlib() {
   download_and_extract "${XBB_ZLIB_ARCHIVE}" "${XBB_ZLIB_URL}"
 
   (
-    cd "$XBB_ZLIB_FOLDER"
+    cd "${XBB_BUILD}/${XBB_ZLIB_FOLDER}"
+
     xbb_activate_bootstrap
 
     ./configure --help
@@ -288,8 +276,8 @@ function do_zlib() {
 
 # -----------------------------------------------------------------------------
 
-function do_xz() {
-
+function do_xz() 
+{
   # https://tukaani.org/xz/
   # https://sourceforge.net/projects/lzmautils/files/
   # 2016-12-30
@@ -307,15 +295,14 @@ function do_xz() {
   download_and_extract "${XBB_XZ_ARCHIVE}" "${XBB_XZ_URL}"
 
   (
-    cd "${XBB_XZ_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_XZ_FOLDER}"
+    
     xbb_activate_bootstrap
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}"
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
@@ -326,8 +313,8 @@ function do_xz() {
   hash -r
 }
 
-function do_tar() {
-
+function do_tar() 
+{
   # https://www.gnu.org/software/tar/
   # https://ftp.gnu.org/gnu/tar/
   # 2016-05-16
@@ -347,7 +334,7 @@ function do_tar() {
   download_and_extract "${XBB_TAR_ARCHIVE}" "${XBB_TAR_URL}"
 
   (
-    cd "${XBB_TAR_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_TAR_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -370,8 +357,8 @@ function do_tar() {
 
 # -----------------------------------------------------------------------------
 
-function do_openssl() {
-
+function do_openssl() 
+{
   # https://www.openssl.org
   # https://www.openssl.org/source/
   # 2017-Nov-02 
@@ -391,25 +378,17 @@ function do_openssl() {
   download_and_extract "${XBB_OPENSSL_ARCHIVE}" "${XBB_OPENSSL_URL}"
 
   (
-    cd "${XBB_OPENSSL_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_OPENSSL_FOLDER}"
 
     xbb_activate_bootstrap
 
     ./config --help
 
-    # Without the 'shared' option cmake builds normally fail, but there 
-    # are workarounds:
-    # - disable compression (`no-comp`), which should fix the need for 
-    #  zlib, which breaks cmake.
-    # - disable threads (`no-threads`), which breaks cmake.
     ./config \
       --prefix="${XBB}" \
-      --openssldir="${XBB}"/openssl \
-      no-threads \
-      no-comp \
-      no-shared
+      --openssldir="${XBB}"/openssl 
     
-    make
+    make -j${MAKE_CONCURRENCY}
     make install_sw
 
     strip --strip-all "${XBB}"/bin/openssl
@@ -457,17 +436,17 @@ function do_openssl() {
       mkdir -p "${XBB}"/openssl
       ln -s /etc/pki/tls/certs/ca-bundle.crt "${XBB}"/openssl/cert.pem
     fi
-  )
 
-  openssl version
+    "${XBB}"/bin/openssl version
+  )
 
   hash -r
 }
 
 # -----------------------------------------------------------------------------
 
-function do_curl() {
-
+function do_curl() 
+{
   # https://curl.haxx.se
   # https://curl.haxx.se/download/
   # 2017-10-23 
@@ -486,19 +465,16 @@ function do_curl() {
   download_and_extract "${XBB_CURL_ARCHIVE}" "${XBB_CURL_URL}"
 
   (
-    cd "${XBB_CURL_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_CURL_FOLDER}"
 
     xbb_activate_bootstrap
 
-    # Without the --disable-static some further builds (cmake) fail.
     ./buildconf
 
     ./configure --help
 
     ./configure \
       --prefix="${XBB}" \
-      --enable-static \
-      --disable-shared \
       --disable-debug \
       --with-ssl \
       --enable-optimize \
@@ -519,17 +495,16 @@ function do_curl() {
     then
       strip --strip-debug "${XBB}"/lib/libcurl.so*
     fi
+    "${XBB}"/bin/curl --version
   )
-
-  "${XBB}"/bin/curl --version
 
   hash -r
 }
 
 # -----------------------------------------------------------------------------
 
-function do_m4() {
-
+function do_m4() 
+{
   # https://www.gnu.org/software/m4/
   # https://ftp.gnu.org/gnu/m4/
   # 2016-12-31
@@ -546,7 +521,7 @@ function do_m4() {
   download_and_extract "${XBB_M4_ARCHIVE}" "${XBB_M4_URL}"
 
   (
-    cd "${XBB_M4_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_M4_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -557,15 +532,15 @@ function do_m4() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/m4 --version
+    "${XBB}"/bin/m4 --version
+  )
 
   hash -r
 }
 
-function do_gawk() {
-
+function do_gawk() 
+{
   # https://www.gnu.org/software/gawk/
   # https://ftp.gnu.org/gnu/gawk/
   # 2017-10-19
@@ -582,7 +557,7 @@ function do_gawk() {
   download_and_extract "${XBB_GAWK_ARCHIVE}" "${XBB_GAWK_URL}"
 
   (
-    cd "${XBB_GAWK_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_GAWK_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -593,15 +568,15 @@ function do_gawk() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/awk --version
+    "${XBB}"/bin/awk --version
+  )
 
   hash -r
 }
 
-function do_autoconf() {
-
+function do_autoconf() 
+{
   # https://www.gnu.org/software/autoconf/
   # https://ftp.gnu.org/gnu/autoconf/
   # 2012-04-24
@@ -618,7 +593,7 @@ function do_autoconf() {
   download_and_extract "${XBB_AUTOCONF_ARCHIVE}" "${XBB_AUTOCONF_URL}"
 
   (
-    cd "${XBB_AUTOCONF_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_AUTOCONF_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -629,15 +604,15 @@ function do_autoconf() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/autoconf --version
+    "${XBB}"/bin/autoconf --version
+  )
 
   hash -r
 }
 
-function do_automake() {
-
+function do_automake() 
+{
   # https://www.gnu.org/software/automake/
   # https://ftp.gnu.org/gnu/automake/
   # 2015-01-05
@@ -654,7 +629,7 @@ function do_automake() {
   download_and_extract "${XBB_AUTOMAKE_ARCHIVE}" "${XBB_AUTOMAKE_URL}"
 
   (
-    cd "${XBB_AUTOMAKE_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_AUTOMAKE_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -665,15 +640,15 @@ function do_automake() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/automake --version
+    "${XBB}"/bin/automake --version
+  )
 
   hash -r
 }
 
-function do_libtool() {
-
+function do_libtool() 
+{
   # https://www.gnu.org/software/libtool/
   # http://gnu.mirrors.linux.ro/libtool/
   # 15-Feb-2015
@@ -690,28 +665,26 @@ function do_libtool() {
   download_and_extract "${XBB_LIBTOOL_ARCHIVE}" "${XBB_LIBTOOL_URL}"
 
   (
-    cd "${XBB_LIBTOOL_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_LIBTOOL_FOLDER}"
 
     xbb_activate_bootstrap
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/libtool --version
+    "${XBB}"/bin/libtool --version
+  )
 
   hash -r
 }
 
-function do_gettext() {
-
+function do_gettext() 
+{
   # https://www.gnu.org/software/gettext/
   # https://ftp.gnu.org/gnu/gettext/
   # 2016-06-09
@@ -728,28 +701,28 @@ function do_gettext() {
   download_and_extract "${XBB_GETTEXT_ARCHIVE}" "${XBB_GETTEXT_URL}"
 
   (
-    cd "${XBB_GETTEXT_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_GETTEXT_FOLDER}"
 
     xbb_activate_bootstrap
+
+    export CFLAGS="${CFLAGS} -Wno-discarded-qualifiers"
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/gettext --version
+    "${XBB}"/bin/gettext --version
+  )
 
   hash -r
 }
 
-function do_patch() {
-
+function do_patch() 
+{
   # https://www.gnu.org/software/patch/
   # https://ftp.gnu.org/gnu/patch/
   # 2015-03-06
@@ -766,7 +739,7 @@ function do_patch() {
   download_and_extract "${XBB_PATCH_ARCHIVE}" "${XBB_PATCH_URL}"
 
   (
-    cd "${XBB_PATCH_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_PATCH_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -777,15 +750,15 @@ function do_patch() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/patch --version
+    "${XBB}"/bin/patch --version
+  )
 
   hash -r
 }
 
-function do_diffutils() {
-
+function do_diffutils() 
+{
   # https://www.gnu.org/software/diffutils/
   # https://ftp.gnu.org/gnu/diffutils/
   # 2017-05-21
@@ -802,7 +775,7 @@ function do_diffutils() {
   download_and_extract "${XBB_DIFFUTILS_ARCHIVE}" "${XBB_DIFFUTILS_URL}"
 
   (
-    cd "${XBB_DIFFUTILS_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_DIFFUTILS_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -813,15 +786,15 @@ function do_diffutils() {
 
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/diff --version
+    "${XBB}"/bin/diff --version
+  )
 
   hash -r
 }
 
-function do_bison() {
-
+function do_bison() 
+{
   # https://www.gnu.org/software/bison/
   # https://ftp.gnu.org/gnu/bison/
   # 2015-01-23
@@ -838,7 +811,7 @@ function do_bison() {
   download_and_extract "${XBB_BISON_ARCHIVE}" "${XBB_BISON_URL}"
 
   (
-    cd "${XBB_BISON_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_BISON_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -849,15 +822,15 @@ function do_bison() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/bison --version
+    "${XBB}"/bin/bison --version
+  )
 
   hash -r
 }
 
-function do_make() {
-
+function do_make() 
+{
   # https://www.gnu.org/software/make/
   # https://ftp.gnu.org/gnu/make/
   # 2016-06-10
@@ -875,7 +848,7 @@ function do_make() {
   download_and_extract "${XBB_MAKE_ARCHIVE}" "${XBB_MAKE_URL}"
 
   (
-    cd "${XBB_MAKE_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_MAKE_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -886,17 +859,17 @@ function do_make() {
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/make --version
+    "${XBB}"/bin/make --version
+  )
 
   hash -r
 }
 
 # -----------------------------------------------------------------------------
 
-function do_pkg_config() {
-
+function do_pkg_config() 
+{
   # https://www.freedesktop.org/wiki/Software/pkg-config/
   # https://pkgconfig.freedesktop.org/releases/
   # 2017-03-20
@@ -913,7 +886,7 @@ function do_pkg_config() {
   download_and_extract "${XBB_PKG_CONFIG_ARCHIVE}" "${XBB_PKG_CONFIG_URL}"
 
   (
-    cd "${XBB_PKG_CONFIG_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_PKG_CONFIG_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -921,22 +894,20 @@ function do_pkg_config() {
 
     ./configure \
       --prefix="${XBB}" \
-      --enable-static \
-      --disable-shared \
       --with-internal-glib
     
     rm -f "${XBB}"/bin/*pkg-config
     make -j${MAKE_CONCURRENCY} 
     make install-strip
-  )
 
-  "${XBB}"/bin/pkg-config --version
+    "${XBB}"/bin/pkg-config --version
+  )
 
   hash -r
 }
 
-function do_flex() {
-
+function do_flex() 
+{
   # https://github.com/westes/flex
   # https://github.com/westes/flex/releases
   # May 6, 2017
@@ -954,7 +925,7 @@ function do_flex() {
   download_and_extract "${XBB_FLEX_ARCHIVE}" "${XBB_FLEX_URL}"
 
   (
-    cd "${XBB_FLEX_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_FLEX_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -963,21 +934,19 @@ function do_flex() {
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/flex --version
+    "${XBB}"/bin/flex --version
+  )
 
   hash -r
 }
 
-function do_perl() {
-
+function do_perl() 
+{
   # https://www.cpan.org
   # http://www.cpan.org/src/
   # 2017-09-22
@@ -997,7 +966,7 @@ function do_perl() {
   download_and_extract "${XBB_PERL_ARCHIVE}" "${XBB_PERL_URL}"
 
   (
-    cd "${XBB_PERL_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_PERL_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -1015,17 +984,17 @@ function do_perl() {
 
     # Install modules.
     curl -L http://cpanmin.us | perl - App::cpanminus
-  )
 
-  "${XBB}"/bin/perl --version
+    "${XBB}"/bin/perl --version
+  )
 
   hash -r
 }
 
 # -----------------------------------------------------------------------------
 
-function do_cmake() {
-
+function do_cmake() 
+{
   # https://cmake.org
   # https://cmake.org/download/
   # November 10, 2017
@@ -1043,7 +1012,7 @@ function do_cmake() {
   download_and_extract "${XBB_CMAKE_ARCHIVE}" "${XBB_CMAKE_URL}"
 
   (
-    cd "${XBB_CMAKE_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_CMAKE_FOLDER}"
 
     xbb_activate_bootstrap
 
@@ -1061,15 +1030,15 @@ function do_cmake() {
     make install
 
     strip --strip-all "${XBB}"/bin/cmake
-  )
 
-  "${XBB}"/bin/cmake --version
+    "${XBB}"/bin/cmake --version
+  )
 
   hash -r
 }
 
-function do_python() {
-
+function do_python() 
+{
   # https://www.python.org
   # https://www.python.org/downloads/source/
   # 2017-09-16
@@ -1086,53 +1055,54 @@ function do_python() {
   download_and_extract "${XBB_PYTHON_ARCHIVE}" "${XBB_PYTHON_URL}"
 
   (
-    cd "${XBB_PYTHON_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_PYTHON_FOLDER}"
 
     xbb_activate_bootstrap 
 
+    export CFLAGS="${CFLAGS} -Wno-int-in-bool-context -Wno-maybe-uninitialized -Wno-nonnull"
+
     ./configure --help
 
-    export PKG_CONFIG="${XBB}/bin/pkg-config-verbose"
+    # It is happier with dynamic zlib and curl.
+    # Without --enabled-shared the build fails with
+    # ImportError: No module named '_struct'
+    # --enable-universalsdk is required by -arch.
 
-    # It would be happier with dynamic zlib and curl.
     # https://github.com/python/cpython/tree/2.7
     ./configure \
-      --prefix="${XBB}"  
+      --prefix="${XBB}" \
+      --enable-shared \
+      --with-universal-archs=${BITS}-bits \
+      --enable-universalsdk
     
     make -j${MAKE_CONCURRENCY} 
     make install
 
     strip --strip-all "${XBB}"/bin/python
     strip --strip-debug "${XBB}"/lib/python*/lib-dynload/*.so
-  )
 
-  "${XBB}"/bin/python --version
+    "${XBB}"/bin/python --version
 
-  hash -r
+    hash -r
  
-  (
-    cd "${XBB_PYTHON_FOLDER}"
-
-    xbb_activate_bootstrap
-
     # Install setuptools and pip. Be sure the new version is used.
     # https://packaging.python.org/tutorials/installing-packages/
     echo
     echo "Installing setuptools and pip..."
     set +e
-    pip --version
+    "${XBB}"/bin/pip --version
     # pip: command not found
     set -e
-    python -m ensurepip --default-pip
-    python -m pip install --upgrade pip setuptools wheel
-    pip --version
+    "${XBB}"/bin/python -m ensurepip --default-pip
+    "${XBB}"/bin/python -m pip install --upgrade pip setuptools wheel
+    "${XBB}"/bin/pip --version
   )
 
   hash -r
 }
 
-function do_scons() {
-
+function do_scons() 
+{
   # http://scons.org
   # https://sourceforge.net/projects/scons/files/scons/3.0.1/
   # 2017-09-16
@@ -1149,11 +1119,11 @@ function do_scons() {
   download_and_extract "${XBB_SCONS_ARCHIVE}" "${XBB_SCONS_URL}"
 
   (
-    cd "${XBB_SCONS_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_SCONS_FOLDER}"
 
     xbb_activate_bootstrap
 
-    python setup.py install --prefix="${XBB}"
+    "${XBB}"/bin/python setup.py install --prefix="${XBB}"
   )
 
   hash -r
@@ -1161,8 +1131,8 @@ function do_scons() {
 
 # -----------------------------------------------------------------------------
 
-function do_gmp() {
-
+function do_gmp() 
+{
   # https://gmplib.org
   # https://gmplib.org/download/gmp/
   # 16-Dec-2016
@@ -1179,11 +1149,9 @@ function do_gmp() {
   download_and_extract "${XBB_GMP_ARCHIVE}" "${XBB_GMP_URL}"
 
   (
-    cd "${XBB_GMP_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_GMP_FOLDER}"
 
     xbb_activate_bootstrap
-
-    export CFLAGS="${STATICLIB_CFLAGS}"
 
     # Mandatory, otherwise it fails on 32-bits. 
     export ABI="${BITS}"
@@ -1191,17 +1159,15 @@ function do_gmp() {
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
 }
 
-function do_mpfr() {
-
+function do_mpfr() 
+{
   # http://www.mpfr.org
   # http://www.mpfr.org/mpfr-3.1.6
   # 7 September 2017
@@ -1218,26 +1184,22 @@ function do_mpfr() {
   download_and_extract "${XBB_MPFR_ARCHIVE}" "${XBB_MPFR_URL}"
 
   (
-    cd "${XBB_MPFR_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_MPFR_FOLDER}"
 
     xbb_activate_bootstrap
-
-    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
 }
 
-function do_mpc() {
-
+function do_mpc() 
+{
   # http://www.multiprecision.org/
   # ftp://ftp.gnu.org/gnu/mpc/
   # February 2015
@@ -1254,26 +1216,22 @@ function do_mpc() {
   download_and_extract "${XBB_MPC_ARCHIVE}" "${XBB_MPC_URL}"
 
   (
-    cd "${XBB_MPC_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_MPC_FOLDER}"
 
     xbb_activate_bootstrap
-
-    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
   )
 }
 
-function do_isl() {
-
+function do_isl() 
+{
   # http://isl.gforge.inria.fr
   # 2016-12-20
   XBB_ISL_VERSION="0.18"
@@ -1289,18 +1247,14 @@ function do_isl() {
   download_and_extract "${XBB_ISL_ARCHIVE}" "${XBB_ISL_URL}"
 
   (
-    cd "$XBB_ISL_FOLDER"
+    cd "${XBB_BUILD}/${XBB_ISL_FOLDER}"
 
     xbb_activate_bootstrap
-
-    export CFLAGS="${STATICLIB_CFLAGS}"
 
     ./configure --help
 
     ./configure \
-      --prefix="${XBB}" \
-      --disable-shared \
-      --enable-static
+      --prefix="${XBB}" 
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
@@ -1329,8 +1283,8 @@ function do_isl() {
 
 # -----------------------------------------------------------------------------
 
-function do_binutils() {
-
+function do_native_binutils() 
+{
   # https://www.gnu.org/software/binutils/
   # https://ftp.gnu.org/gnu/binutils/
   # 2017-07-24
@@ -1341,37 +1295,44 @@ function do_binutils() {
 
   # Requires gmp, mpfr, mpc, isl.
   echo
-  echo "Building binutils ${XBB_BINUTILS_VERSION}..."
+  echo "Building native binutils ${XBB_BINUTILS_VERSION}..."
 
   cd "${XBB_BUILD}"
 
   download_and_extract "${XBB_BINUTILS_ARCHIVE}" "${XBB_BINUTILS_URL}"
 
   (
-    cd "${XBB_BINUTILS_FOLDER}"
+    cd "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_static
+
+    export CFLAGS="${CFLAGS} -Wno-sign-compare"
+    export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
 
     ./configure --help
 
+    # --with-sysroot failed.
     ./configure \
       --prefix="${XBB}" \
+      --build="${BUILD}" \
       --disable-shared \
-      --enable-static
-    
+      --enable-static \
+      --without-python \
+      --disable-lto
+  
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/size --version
+    "${XBB}"/bin/size --version
+  )
 
   hash -r
 }
 
 # -----------------------------------------------------------------------------
 
-function do_gcc() {
-
+function do_native_gcc() 
+{
   # https://gcc.gnu.org
   # https://gcc.gnu.org/wiki/InstallingGCC
 
@@ -1384,7 +1345,7 @@ function do_gcc() {
 
   # Requires gmp, mpfr, mpc, isl.
   echo
-  echo "Building gcc ${XBB_GCC_VERSION}..."
+  echo "Building native gcc ${XBB_GCC_VERSION}..."
 
   cd "${XBB_BUILD}"
 
@@ -1392,28 +1353,36 @@ function do_gcc() {
 
   # The documentation recommands a separate build folder.
   (
-    mkdir -p "${XBB_GCC_FOLDER}-build"
-    cd "${XBB_GCC_FOLDER}-build"
+    mkdir -p "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
+    cd "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_static
+
+    export CFLAGS="${CFLAGS} -Wno-sign-compare"
+    export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
 
     "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" --help
 
+    # --with-sysroot failed.
     # --disable-shared failed with errors in libstdc++-v3
     "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" \
       --prefix="${XBB}" \
+      --build="${BUILD}" \
       --enable-languages=c,c++ \
-      --disable-multilib
+      --enable-static \
+      --disable-multilib \
+      --without-python \
+      --disable-lto
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
-  )
 
-  "${XBB}"/bin/g++ --version
+    "${XBB}"/bin/g++ --version
 
-  (
     mkdir -p "${HOME}"/tmp
     cd "${HOME}"/tmp
+
+    set +e
 
     # Note: __EOF__ is quoted to prevent substitutions here.
     cat <<'__EOF__' > hello.cpp
@@ -1426,12 +1395,17 @@ main(int argc, char* argv[])
 }
 __EOF__
 
-    "${XBB}"/bin/g++ hello.cpp -o hello
-    readelf -d hello
-
-    if [ "x$(./hello)x" != "xHellox" ]
+    if true
     then
-      exit 1
+
+      "${XBB}"/bin/g++ hello.cpp -o hello
+      "${XBB}"/bin/readelf -d hello
+
+      if [ "x$(./hello)x" != "xHellox" ]
+      then
+        exit 1
+      fi
+
     fi
 
     rm -rf hello.cpp hello
@@ -1445,11 +1419,9 @@ __EOF__
 # WARNING: the order is important, since some of the builds depend
 # on previous ones.
 
-# For extra safety, the ${XBB} is not permanently added to PATH,
-# it is added explicitly with xbb_activate_bootstrap in sub-shells.
-
-# Generally build only the static versions of the libraries.
-# (the exception are libcrypto.so libcurl.so libssl.so)
+# For extra safety, the ${XBB} folder is not permanently in the PATH,
+# it is added explicitly with xbb_activate_bootstrap in sub-shells;
+# by default, the environment is that of the original CentOS.
 
 # -----------------------------------------------------------------------------
 
