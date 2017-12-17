@@ -261,17 +261,6 @@ function do_zlib()
 
     make -j${MAKE_CONCURRENCY}
     make install
-
-    if [ -f "${XBB}"/lib/libz.a ]
-    then
-      strip --strip-debug "${XBB}"/lib/libz.a 
-    fi
-
-    # 415 Bus error
-    # if [ -f "${XBB}"/lib/libz.so ]
-    # then
-    #   strip --strip-debug "${XBB}"/lib/libz.so
-    # fi
   )
 }
 
@@ -396,44 +385,6 @@ function do_openssl()
 
     strip --strip-all "${XBB}"/bin/openssl
 
-    if [ -f "${XBB}"/lib/libcrypto.a ]
-    then
-      strip --strip-debug "${XBB}"/lib/libcrypto.a
-    fi
-
-    if [ -f "${XBB}"/lib/libssl.a ]
-    then
-      strip --strip-debug "${XBB}"/lib/libssl.a 
-    fi
-
-    # Comment out when no-shared
-    if [ -f "${XBB}"/lib/libcrypto.so ]
-    then
-      strip --strip-debug "${XBB}"/lib/libcrypto.so*
-    fi
-
-    if [ -f "${XBB}"/lib/libssl.so ]
-    then
-      strip --strip-debug "${XBB}"/lib/libssl.so*
-    fi
-
-    # Patch the .pc files to add refs to libs.
-    if [ -f "${XBB}"/lib/pkgconfig/openssl.pc ]
-    then
-      cat "${XBB}"/lib/pkgconfig/openssl.pc
-      sed -i 's/^Libs:.*/Libs: -L${libdir} -lssl -lcrypto -ldl/' "${XBB}"/lib/pkgconfig/openssl.pc
-      sed -i 's/^Libs.private:.*/Libs.private: -L${libdir} -lssl -lcrypto -ldl -lz/' "${XBB}"/lib/pkgconfig/openssl.pc
-      cat "${XBB}"/lib/pkgconfig/openssl.pc
-    fi
-
-    if [ -f "${XBB}"/lib/pkgconfig/libssl.pc ]
-    then
-      cat "${XBB}"/lib/pkgconfig/libssl.pc
-      sed -i 's/^Libs:.*/Libs: -L${libdir} -lssl -lcrypto -ldl/' "${XBB}"/lib/pkgconfig/libssl.pc
-      sed -i 's/^Libs.private:.*/Libs.private: -L${libdir} -lssl -lcrypto -ldl -lz/' "${XBB}"/lib/pkgconfig/libssl.pc
-      cat "${XBB}"/lib/pkgconfig/libssl.pc
-    fi
-
     if [ ! -f "${XBB}"/openssl/cert.pem ]
     then
       mkdir -p "${XBB}"/openssl
@@ -490,15 +441,6 @@ function do_curl()
 
     strip --strip-all "${XBB}"/bin/curl
 
-    if [ -f "${XBB}/lib/libcurl.a" ]
-    then
-      strip --strip-debug "${XBB}/lib/libcurl.a"
-    fi
-
-    if [ -f "${XBB}"/lib/libcurl.so ]
-    then
-      strip --strip-debug "${XBB}"/lib/libcurl.so*
-    fi
     "${XBB}"/bin/curl --version
   )
 
@@ -1085,7 +1027,6 @@ function do_python()
     make install
 
     strip --strip-all "${XBB}"/bin/python
-    strip --strip-debug "${XBB}"/lib/python*/lib-dynload/*.so
 
     "${XBB}"/bin/python --version
 
@@ -1424,6 +1365,37 @@ __EOF__
   hash -r
 }
 
+# -----------------------------------------------------------------------------
+
+do_strip_libs() 
+{
+  (
+    cd "${XBB}"
+
+    xbb_activate_bootstrap
+
+    set +e
+    # -type f to skip links.
+    find . -name '*.so' -type f -print -exec strip --strip-debug {} \;
+    find . -name '*.so.*'  -type f -print -exec strip --strip-debug {} \;
+    find . -name '*.a'  -type f  -print -exec strip --strip-debug {} \;
+    set -e
+  )
+}
+
+# -----------------------------------------------------------------------------
+
+do_cleaunup() 
+{
+  # Preserve download, will be used by xbb and removed later.
+  # rm -rf "$XBB_DOWNLOAD"
+
+  # All other can go.
+  rm -rf "${XBB_BUILD}"
+  rm -rf "${XBB_TMP}"
+  rm -rf "${XBB_INPUT}"
+}
+
 # =============================================================================
 
 # WARNING: the order is important, since some of the builds depend
@@ -1435,65 +1407,84 @@ __EOF__
 
 # -----------------------------------------------------------------------------
 
-# The first step is to build a new zlib, it is used in most of the tools.
-do_zlib
+if true
+then
 
-# The second step is to build a new tar, that understand xz.
-# It requires the xz libraries, so we do it first.
-do_xz
-do_tar
+  # New zlib, it is used in most of the tools.
+  do_zlib
 
-# From this moment on, .xz archives can be processed.
+  # Library, required by tar. 
+  do_xz
 
-# Build a new openssl, required by curl, cmake, python, etc.
-do_openssl
+  # New tar, with xz support.
+  do_tar # Requires xz.
 
-# Build a new curl, that better understands all protocols.
-do_curl
+  # From this moment on, .xz archives can be processed.
 
-# Build GNU tools. From now, xz is available.
-do_m4
-do_gawk
-do_autoconf
-do_automake
-do_libtool
-do_gettext
-do_patch
-do_diffutils
-do_bison
-do_make
+  # New openssl, required by curl, cmake, python, etc.
+  do_openssl
 
-# Build third party tools.
-do_pkg_config
+  # New curl, that better understands all protocols.
+  do_curl
 
-# Requires gettext.
-do_flex
+fi
 
-do_perl
-do_cmake
-do_python
-do_scons
+if true
+then
 
-# Libraries.
-do_gmp
-do_mpfr
-do_mpc
-do_isl
+  # GNU tools. 
+  do_m4
+  do_gawk
+  do_autoconf
+  do_automake
+  do_libtool
+  do_gettext
+  do_patch
+  do_diffutils
+  do_bison
+  do_make
 
-# And finally build the binutils and gcc.
+  # Third party tools.
+  do_pkg_config
 
-# Require gmp, mpfr, mpc, isl.
-do_binutils
-do_gcc
+  do_flex # Requires gettext.
 
-# -----------------------------------------------------------------------------
+  do_perl
+  do_cmake
 
-# Preserve download, will be used by xbb and removed later.
-# rm -rf "$XBB_DOWNLOAD"
+fi
 
-# All other can go.
-rm -rf "${XBB_BUILD}"
-rm -rf "${XBB_TMP}"
-rm -rf "${XBB_INPUT}"
+if true
+then
+
+  do_python
+  do_scons
+
+fi
+
+if true
+then
+
+  # Libraries, required by gcc.
+  do_gmp
+  do_mpfr
+  do_mpc
+  do_isl
+
+fi
+
+if true
+then
+
+  # Native binutils and gcc.
+  do_native_binutils # Requires gmp, mpfr, mpc, isl.
+  do_native_gcc # Requires gmp, mpfr, mpc, isl.
+
+fi
+
+# Strip debug from *.a and *.so.
+do_strip_libs
+
+do_cleaunup
 
 # -----------------------------------------------------------------------------
