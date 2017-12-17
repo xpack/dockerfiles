@@ -237,7 +237,8 @@ function do_zlib()
   XBB_ZLIB_VERSION="1.2.11"
   XBB_ZLIB_FOLDER="zlib-${XBB_ZLIB_VERSION}"
   XBB_ZLIB_ARCHIVE="${XBB_ZLIB_FOLDER}.tar.gz"
-  XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
+  # XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
+  XBB_ZLIB_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_ZLIB_ARCHIVE}"
 
   echo
   echo "Building zlib ${XBB_ZLIB_VERSION}..."
@@ -285,7 +286,8 @@ function do_xz()
   XBB_XZ_FOLDER="xz-${XBB_XZ_VERSION}"
   # Conservatively use .gz, the native tar may be very old.
   XBB_XZ_ARCHIVE="${XBB_XZ_FOLDER}.tar.gz"
-  XBB_XZ_URL="https://sourceforge.net/projects/lzmautils/files/${XBB_XZ_ARCHIVE}"
+  # XBB_XZ_URL="https://sourceforge.net/projects/lzmautils/files/${XBB_XZ_ARCHIVE}"
+  XBB_XZ_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_XZ_ARCHIVE}"
 
   echo
   echo "Building xz ${XBB_XZ_VERSION}..."
@@ -366,7 +368,8 @@ function do_openssl()
   XBB_OPENSSL_FOLDER="openssl-${XBB_OPENSSL_VERSION}"
   # Only .gz available.
   XBB_OPENSSL_ARCHIVE="${XBB_OPENSSL_FOLDER}.tar.gz"
-  XBB_OPENSSL_URL="https://www.openssl.org/source/${XBB_OPENSSL_ARCHIVE}"
+  # XBB_OPENSSL_URL="https://www.openssl.org/source/${XBB_OPENSSL_ARCHIVE}"
+  XBB_OPENSSL_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_OPENSSL_ARCHIVE}"
 
   # https://github.com/openssl/openssl/blob/master/INSTALL
 
@@ -453,7 +456,8 @@ function do_curl()
   XBB_CURL_VERSION="7.56.1"
   XBB_CURL_FOLDER="curl-${XBB_CURL_VERSION}"
   XBB_CURL_ARCHIVE="${XBB_CURL_FOLDER}.tar.xz"
-  XBB_CURL_URL="https://curl.haxx.se/download/${XBB_CURL_ARCHIVE}"
+  # XBB_CURL_URL="https://curl.haxx.se/download/${XBB_CURL_ARCHIVE}"
+  XBB_CURL_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_CURL_ARCHIVE}"
 
   # Requires openssl & zlib.
 
@@ -655,7 +659,8 @@ function do_libtool()
   XBB_LIBTOOL_VERSION="2.4.6"
   XBB_LIBTOOL_FOLDER="libtool-${XBB_LIBTOOL_VERSION}"
   XBB_LIBTOOL_ARCHIVE="${XBB_LIBTOOL_FOLDER}.tar.xz"
-  XBB_LIBTOOL_URL="http://ftpmirror.gnu.org/libtool/${XBB_LIBTOOL_ARCHIVE}"
+  # XBB_LIBTOOL_URL="http://ftpmirror.gnu.org/libtool/${XBB_LIBTOOL_ARCHIVE}"
+  XBB_LIBTOOL_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_LIBTOOL_ARCHIVE}"
 
   echo
   echo "Building libtool ${XBB_LIBTOOL_VERSION}..."
@@ -876,7 +881,8 @@ function do_pkg_config()
   XBB_PKG_CONFIG_VERSION="0.29.2"
   XBB_PKG_CONFIG_FOLDER="pkg-config-${XBB_PKG_CONFIG_VERSION}"
   XBB_PKG_CONFIG_ARCHIVE="${XBB_PKG_CONFIG_FOLDER}.tar.gz"
-  XBB_PKG_CONFIG_URL="https://pkgconfig.freedesktop.org/releases/${XBB_PKG_CONFIG_ARCHIVE}"
+  # XBB_PKG_CONFIG_URL="https://pkgconfig.freedesktop.org/releases/${XBB_PKG_CONFIG_ARCHIVE}"
+  XBB_PKG_CONFIG_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_PKG_CONFIG_ARCHIVE}"
 
   echo
   echo "Building pkg-config ${XBB_PKG_CONFIG_VERSION}..."
@@ -1109,7 +1115,8 @@ function do_scons()
   XBB_SCONS_VERSION="3.0.1"
   XBB_SCONS_FOLDER="scons-${XBB_SCONS_VERSION}"
   XBB_SCONS_ARCHIVE="${XBB_SCONS_FOLDER}.tar.gz"
-  XBB_SCONS_URL="https://sourceforge.net/projects/scons/files/scons/${XBB_SCONS_VERSION}/${XBB_SCONS_ARCHIVE}"
+  # XBB_SCONS_URL="https://sourceforge.net/projects/scons/files/scons/${XBB_SCONS_VERSION}/${XBB_SCONS_ARCHIVE}"
+  XBB_SCONS_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_SCONS_ARCHIVE}"
 
   echo
   echo "Installing scons ${XBB_SCONS_VERSION}..."
@@ -1139,7 +1146,8 @@ function do_gmp()
   XBB_GMP_VERSION="6.1.2"
   XBB_GMP_FOLDER="gmp-${XBB_GMP_VERSION}"
   XBB_GMP_ARCHIVE="${XBB_GMP_FOLDER}.tar.xz"
-  XBB_GMP_URL="https://gmplib.org/download/gmp/${XBB_GMP_ARCHIVE}"
+  # XBB_GMP_URL="https://gmplib.org/download/gmp/${XBB_GMP_ARCHIVE}"
+  XBB_GMP_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_GMP_ARCHIVE}"
 
   echo
   echo "Building gmp ${XBB_GMP_VERSION}..."
@@ -1174,7 +1182,8 @@ function do_mpfr()
   XBB_MPFR_VERSION="3.1.6"
   XBB_MPFR_FOLDER="mpfr-${XBB_MPFR_VERSION}"
   XBB_MPFR_ARCHIVE="${XBB_MPFR_FOLDER}.tar.xz"
-  XBB_MPFR_URL="http://www.mpfr.org/${XBB_MPFR_FOLDER}/${XBB_MPFR_ARCHIVE}"
+  # XBB_MPFR_URL="http://www.mpfr.org/${XBB_MPFR_FOLDER}/${XBB_MPFR_ARCHIVE}"
+  XBB_MPFR_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_MPFR_ARCHIVE}"
 
   echo
   echo "Building mpfr ${XBB_MPFR_VERSION}..."
@@ -1237,7 +1246,8 @@ function do_isl()
   XBB_ISL_VERSION="0.18"
   XBB_ISL_FOLDER="isl-${XBB_ISL_VERSION}"
   XBB_ISL_ARCHIVE="${XBB_ISL_FOLDER}.tar.xz"
-  XBB_ISL_URL="http://isl.gforge.inria.fr/${XBB_ISL_ARCHIVE}"
+  # XBB_ISL_URL="http://isl.gforge.inria.fr/${XBB_ISL_ARCHIVE}"
+  XBB_ISL_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_ISL_ARCHIVE}"
 
   echo
   echo "Building isl ${XBB_ISL_VERSION}..."
