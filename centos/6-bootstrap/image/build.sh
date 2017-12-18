@@ -97,15 +97,24 @@ function xbb_activate_param()
   PATH=${PATH:-""}
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
 
-  export PATH="${PREFIX_}/bin:${PATH}"
-  export C_INCLUDE_PATH="${PREFIX_}/include"
-  export CPLUS_INCLUDE_PATH="${PREFIX_}/include"
-  export LIBRARY_PATH="${PREFIX_}/lib"
-  export PKG_CONFIG_PATH="${PREFIX_}/lib/pkgconfig:/usr/lib/pkgconfig"
-  export LD_LIBRARY_PATH="${PREFIX_}/lib:${LD_LIBRARY_PATH}"
-
+  export PATH="${PREFIX_}"/bin:${PATH}
+  export C_INCLUDE_PATH="${PREFIX_}"/include
+  export CPLUS_INCLUDE_PATH="${PREFIX_}"/include
+  export LIBRARY_PATH="${PREFIX_}"/lib
   export CPPFLAGS="-I${PREFIX_}/include"
+
+  export PKG_CONFIG_PATH="${PREFIX_}"/lib/pkgconfig:/usr/lib/pkgconfig
+
+  export LD_LIBRARY_PATH="${PREFIX_}"/lib:${LD_LIBRARY_PATH}
   export LDPATHFLAGS="-L${PREFIX_}/lib ${EXTRA_LDPATHFLAGS_}"
+
+  UNAME_ARCH=$(uname -p)
+  if [ "${UNAME_ARCH}" == "x86_64" ]
+  then
+    export PKG_CONFIG_PATH="${PREFIX_}"/lib64/pkgconfig:${PKG_CONFIG_PATH}
+    export LD_LIBRARY_PATH="${PREFIX_}"/lib64:${LD_LIBRARY_PATH}
+    export LDPATHFLAGS="-L${PREFIX_}/lib64 ${LDPATHFLAGS}"
+  fi
 
   # Do not include -I... here, use CPPFLAGS.
   local COMMON_CFLAGS_=${COMMON_CFLAGS_:-"-g -O2"}
@@ -134,18 +143,9 @@ function xbb_activate_bootstrap()
 
   EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
   EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_LDFLAGS_="-Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB}/lib\"" 
-
-  xbb_activate_param
-}
-
-function xbb_activate_bootstrap_static()
-{
-  PREFIX_="${XBB}"
-
-  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections -Wl,-rpath -Wl,\"${XBB}/lib\"" 
+  # Without -static-libstdc++ it'll pick up the out of date 
+  # /usr/lib[64]/libstdc++.so.6
+  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB}/lib\"" 
 
   xbb_activate_param
 }
@@ -1255,7 +1255,7 @@ function do_native_binutils()
   (
     cd "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}"
 
-    xbb_activate_bootstrap_static
+    xbb_activate_bootstrap
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1307,7 +1307,7 @@ function do_native_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
     cd "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
 
-    xbb_activate_bootstrap_static
+    xbb_activate_bootstrap
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1375,10 +1375,13 @@ do_strip_libs()
     xbb_activate_bootstrap
 
     set +e
-    # -type f to skip links.
-    find . -name '*.so' -type f -print -exec strip --strip-debug {} \;
-    find . -name '*.so.*'  -type f -print -exec strip --strip-debug {} \;
-    find . -name '*.a'  -type f  -print -exec strip --strip-debug {} \;
+    if [ -f "${XBB}"/bin/strip ]
+    then
+      # -type f to skip links.
+      find lib* -name '*.so' -type f -print -exec "${XBB}"/bin/strip --strip-debug {} \;
+      find lib* -name '*.so.*'  -type f -print -exec "${XBB}"/bin/strip --strip-debug {} \;
+      find lib* -name '*.a'  -type f  -print -exec "${XBB}"/bin/strip --strip-debug {} \;
+    fi
     set -e
   )
 }
