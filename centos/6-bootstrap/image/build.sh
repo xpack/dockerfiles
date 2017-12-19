@@ -141,8 +141,9 @@ function xbb_activate_bootstrap()
 {
   PREFIX_="${XBB}"
 
-  EXTRA_CFLAGS_="-ffunction-sections -fdata-sections"
-  EXTRA_CXXFLAGS_="-ffunction-sections -fdata-sections"
+  # `-pipe` should make things faster, by using more memory.
+  EXTRA_CFLAGS_="-pipe -ffunction-sections -fdata-sections"
+  EXTRA_CXXFLAGS_="-pipe -ffunction-sections -fdata-sections"
   # Without -static-libstdc++ it'll pick up the out of date 
   # /usr/lib[64]/libstdc++.so.6
   EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB}/lib\"" 
