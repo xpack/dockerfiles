@@ -124,6 +124,7 @@ function xbb_activate_param()
 	export CXXFLAGS="${COMMON_CXXFLAGS_} ${EXTRA_CXXFLAGS_}"
   export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
+  echo
   echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
   echo
   echo PATH=${PATH}
@@ -138,6 +139,24 @@ function xbb_activate_param()
 }
 
 function xbb_activate_bootstrap()
+{
+  PATH=${PATH:-""}
+  export PATH="${XBB_FOLDER}"/bin:${PATH}
+
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
+  export LD_LIBRARY_PATH="${XBB_FOLDER}/lib:${LD_LIBRARY_PATH}"
+
+  UNAME_ARCH=$(uname -p)
+  if [ "${UNAME_ARCH}" == "x86_64" ]
+  then
+    export LD_LIBRARY_PATH="${XBB}/lib64:${LD_LIBRARY_PATH}"
+  fi
+  echo
+  echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs)"
+}
+
+
+function xbb_activate_bootstrap_dev()
 {
   PREFIX_="${XBB}"
 
@@ -251,7 +270,7 @@ function do_zlib()
   (
     cd "${XBB_BUILD}/${XBB_ZLIB_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -289,7 +308,7 @@ function do_xz()
   (
     cd "${XBB_BUILD}/${XBB_XZ_FOLDER}"
     
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -300,7 +319,11 @@ function do_xz()
     make install-strip
   )
 
-  "${XBB}"/bin/xz --version
+  (
+    xbb_activate_bootstrap
+
+    "${XBB}"/bin/xz --version
+  )
 
   hash -r
 }
@@ -328,7 +351,7 @@ function do_tar()
   (
     cd "${XBB_BUILD}/${XBB_TAR_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     # Avoid 'configure: error: you should not run configure as root'.
     export FORCE_UNSAFE_CONFIGURE=1
@@ -342,7 +365,11 @@ function do_tar()
     make install-strip
   )
 
-  "${XBB}"/bin/tar --version
+  (
+    xbb_activate_bootstrap
+
+    "${XBB}"/bin/tar --version
+  )
 
   hash -r
 }
@@ -373,7 +400,7 @@ function do_openssl()
   (
     cd "${XBB_BUILD}/${XBB_OPENSSL_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./config --help
 
@@ -391,6 +418,10 @@ function do_openssl()
       mkdir -p "${XBB}"/openssl
       ln -s /etc/pki/tls/certs/ca-bundle.crt "${XBB}"/openssl/cert.pem
     fi
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/openssl version
   )
@@ -423,7 +454,7 @@ function do_curl()
   (
     cd "${XBB_BUILD}/${XBB_CURL_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./buildconf
 
@@ -441,6 +472,10 @@ function do_curl()
     make install
 
     strip --strip-all "${XBB}"/bin/curl
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/curl --version
   )
@@ -470,7 +505,7 @@ function do_m4()
   (
     cd "${XBB_BUILD}/${XBB_M4_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -479,6 +514,10 @@ function do_m4()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/m4 --version
   )
@@ -506,7 +545,7 @@ function do_gawk()
   (
     cd "${XBB_BUILD}/${XBB_GAWK_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -515,6 +554,10 @@ function do_gawk()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/awk --version
   )
@@ -542,7 +585,7 @@ function do_autoconf()
   (
     cd "${XBB_BUILD}/${XBB_AUTOCONF_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -551,6 +594,10 @@ function do_autoconf()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/autoconf --version
   )
@@ -578,7 +625,7 @@ function do_automake()
   (
     cd "${XBB_BUILD}/${XBB_AUTOMAKE_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -587,6 +634,10 @@ function do_automake()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/automake --version
   )
@@ -615,7 +666,7 @@ function do_libtool()
   (
     cd "${XBB_BUILD}/${XBB_LIBTOOL_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -624,6 +675,10 @@ function do_libtool()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/libtool --version
   )
@@ -651,7 +706,7 @@ function do_gettext()
   (
     cd "${XBB_BUILD}/${XBB_GETTEXT_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     export CFLAGS="${CFLAGS} -Wno-discarded-qualifiers"
 
@@ -662,6 +717,10 @@ function do_gettext()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/gettext --version
   )
@@ -689,7 +748,7 @@ function do_patch()
   (
     cd "${XBB_BUILD}/${XBB_PATCH_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -698,6 +757,10 @@ function do_patch()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/patch --version
   )
@@ -725,7 +788,7 @@ function do_diffutils()
   (
     cd "${XBB_BUILD}/${XBB_DIFFUTILS_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -734,6 +797,10 @@ function do_diffutils()
 
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/diff --version
   )
@@ -761,7 +828,7 @@ function do_bison()
   (
     cd "${XBB_BUILD}/${XBB_BISON_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -770,6 +837,10 @@ function do_bison()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/bison --version
   )
@@ -798,7 +869,7 @@ function do_make()
   (
     cd "${XBB_BUILD}/${XBB_MAKE_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -807,6 +878,10 @@ function do_make()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/make --version
   )
@@ -837,7 +912,7 @@ function do_pkg_config()
   (
     cd "${XBB_BUILD}/${XBB_PKG_CONFIG_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -848,6 +923,10 @@ function do_pkg_config()
     rm -f "${XBB}"/bin/*pkg-config
     make -j${MAKE_CONCURRENCY} 
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/pkg-config --version
   )
@@ -876,7 +955,7 @@ function do_flex()
   (
     cd "${XBB_BUILD}/${XBB_FLEX_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./autogen.sh
 
@@ -887,6 +966,10 @@ function do_flex()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/flex --version
   )
@@ -917,7 +1000,7 @@ function do_perl()
   (
     cd "${XBB_BUILD}/${XBB_PERL_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     set +e
     # Exits with error.
@@ -933,6 +1016,10 @@ function do_perl()
 
     # Install modules.
     curl -L http://cpanmin.us | perl - App::cpanminus
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/perl --version
   )
@@ -963,7 +1050,7 @@ function do_cmake()
   (
     cd "${XBB_BUILD}/${XBB_CMAKE_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     # Normally it would be much happier with dynamic zlib and curl.
 
@@ -979,6 +1066,10 @@ function do_cmake()
     make install
 
     strip --strip-all "${XBB}"/bin/cmake
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/cmake --version
   )
@@ -1006,7 +1097,7 @@ function do_python()
   (
     cd "${XBB_BUILD}/${XBB_PYTHON_FOLDER}"
 
-    xbb_activate_bootstrap 
+    xbb_activate_bootstrap_dev 
 
     export CFLAGS="${CFLAGS} -Wno-int-in-bool-context -Wno-maybe-uninitialized -Wno-nonnull"
 
@@ -1028,11 +1119,19 @@ function do_python()
     make install
 
     strip --strip-all "${XBB}"/bin/python
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/python --version
+  )
 
-    hash -r
- 
+  hash -r
+
+  (
+    xbb_activate_bootstrap
+
     # Install setuptools and pip. Be sure the new version is used.
     # https://packaging.python.org/tutorials/installing-packages/
     echo
@@ -1070,7 +1169,7 @@ function do_scons()
   (
     cd "${XBB_BUILD}/${XBB_SCONS_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     "${XBB}"/bin/python setup.py install --prefix="${XBB}"
   )
@@ -1101,7 +1200,7 @@ function do_gmp()
   (
     cd "${XBB_BUILD}/${XBB_GMP_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     # Mandatory, otherwise it fails on 32-bits. 
     export ABI="${BITS}"
@@ -1137,7 +1236,7 @@ function do_mpfr()
   (
     cd "${XBB_BUILD}/${XBB_MPFR_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -1169,7 +1268,7 @@ function do_mpc()
   (
     cd "${XBB_BUILD}/${XBB_MPC_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -1201,7 +1300,7 @@ function do_isl()
   (
     cd "${XBB_BUILD}/${XBB_ISL_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     ./configure --help
 
@@ -1256,7 +1355,7 @@ function do_native_binutils()
   (
     cd "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}"
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1274,6 +1373,10 @@ function do_native_binutils()
   
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/size --version
   )
@@ -1308,7 +1411,7 @@ function do_native_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
     cd "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
 
-    xbb_activate_bootstrap
+    xbb_activate_bootstrap_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1328,13 +1431,19 @@ function do_native_gcc()
     
     make -j${MAKE_CONCURRENCY}
     make install-strip
+  )
+
+  (
+    xbb_activate_bootstrap
 
     "${XBB}"/bin/g++ --version
+  )
 
+  (
     mkdir -p "${HOME}"/tmp
     cd "${HOME}"/tmp
 
-    set +e
+    xbb_activate_bootstrap
 
     # Note: __EOF__ is quoted to prevent substitutions here.
     cat <<'__EOF__' > hello.cpp
@@ -1406,7 +1515,7 @@ do_cleaunup()
 # on previous ones.
 
 # For extra safety, the ${XBB} folder is not permanently in the PATH,
-# it is added explicitly with xbb_activate_bootstrap in sub-shells;
+# it is added explicitly with xbb_activate_bootstrap_dev in sub-shells;
 # by default, the environment is that of the original CentOS.
 
 # -----------------------------------------------------------------------------
