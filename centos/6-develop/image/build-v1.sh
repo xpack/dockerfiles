@@ -45,6 +45,7 @@ which \
 zlib-devel \
 file \
 diffutils \
-cmake
+cmake \
+libudev-devel
 
 # -----------------------------------------------------------------------------
