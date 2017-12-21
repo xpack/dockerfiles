@@ -78,7 +78,7 @@ export CXX=g++
 # -----------------------------------------------------------------------------
 
 # Note: __EOF__ is quoted to prevent substitutions here.
-cat <<'__EOF__' >> "${XBB}"/xbb.sh
+cat <<'__EOF__' > "${XBB}"/xbb.sh
 
 export XBB_FOLDER="/opt/xbb-bootstrap"
 
@@ -179,7 +179,7 @@ source "${XBB}"/xbb.sh
 
 # Note: __EOF__ is quoted to prevent substitutions here.
 mkdir -p "${XBB}"/bin
-cat <<'__EOF__' >> "${XBB}"/bin/pkg-config-verbose
+cat <<'__EOF__' > "${XBB}"/bin/pkg-config-verbose
 #! /bin/sh
 # pkg-config wrapper for debug
 
