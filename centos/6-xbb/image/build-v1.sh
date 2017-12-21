@@ -38,7 +38,7 @@ IFS=$'\n\t'
 # To activate the new build environment, use:
 #
 #   $ source /opt/xbb/xbb.sh
-#   $ xbb_activate
+#   $ xbb_activate_dev
 
 # If you ever happen to want to link against installed libraries
 # in a given directory, LIBDIR, you must either use libtool, and
@@ -107,7 +107,7 @@ export CXX=g++
 # -----------------------------------------------------------------------------
 
 # Note: __EOF__ is quoted to prevent substitutions here.
-cat <<'__EOF__' >> "${XBB}"/xbb.sh
+cat <<'__EOF__' > "${XBB}"/xbb.sh
 
 export XBB_FOLDER="/opt/xbb"
 
@@ -166,22 +166,22 @@ function xbb_activate_param()
   echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 }
 
-xbb_activate_run()
+xbb_activate()
 {
   PATH=${PATH:-""}
-  export PATH="${XBB}"/bin:${PATH}
+  export PATH="${XBB_FOLDER}"/bin:${PATH}
 
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
-  export LD_LIBRARY_PATH="${XBB}/lib:${LD_LIBRARY_PATH}"
+  export LD_LIBRARY_PATH="${XBB_FOLDER}/lib:${LD_LIBRARY_PATH}"
 
   UNAME_ARCH=$(uname -p)
   if [ "${UNAME_ARCH}" == "x86_64" ]
   then
-    export LD_LIBRARY_PATH="${XBB}/lib64:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${XBB_FOLDER}/lib64:${LD_LIBRARY_PATH}"
   fi
 }
 
-xbb_activate()
+xbb_activate_dev()
 {
   PREFIX_="${XBB_FOLDER}"
 
@@ -202,7 +202,7 @@ __EOF__
 
 # Note: __EOF__ is quoted to prevent substitutions here.
 mkdir -p "${XBB}"/bin
-cat <<'__EOF__' >> "${XBB}"/bin/pkg-config-verbose
+cat <<'__EOF__' > "${XBB}"/bin/pkg-config-verbose
 #! /bin/sh
 # pkg-config wrapper for debug
 
@@ -227,7 +227,7 @@ source "${XBB}"/xbb.sh
 # This build uses the bootstrap binaries; redefine 
 # this function to add the bootstrap path.
 # The newly built binaries will be prefered.
-xbb_activate()
+xbb_activate_dev()
 {
   PATH=${PATH:-""}
   export PATH="${XBB_BOOTSTRAP}"/bin:${PATH}
@@ -318,7 +318,7 @@ function do_zlib()
   (
     cd "${XBB_BUILD}/${XBB_ZLIB_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -354,7 +354,7 @@ function do_openssl()
   (
     cd "${XBB_BUILD}/${XBB_OPENSSL_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     # This config does not use the standard GNU environment definitions.
     ./config --help
@@ -376,7 +376,7 @@ function do_openssl()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/openssl version
   )
@@ -405,7 +405,7 @@ function do_curl()
   (
     cd "${XBB_BUILD}/${XBB_CURL_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -424,7 +424,7 @@ function do_curl()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/curl --version
   )
@@ -455,7 +455,7 @@ function do_xz()
   (
     cd "${XBB_BUILD}/${XBB_XZ_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-implicit-fallthrough"
 
@@ -469,7 +469,7 @@ function do_xz()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/xz --version
   )
@@ -498,7 +498,7 @@ function do_tar()
   (
     cd "${XBB_BUILD}/${XBB_TAR_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     # Avoid 'configure: error: you should not run configure as root'.
     export FORCE_UNSAFE_CONFIGURE=1
@@ -513,7 +513,7 @@ function do_tar()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/tar --version
   )
@@ -545,7 +545,7 @@ function do_gmp()
   (
     cd "${XBB_BUILD}/${XBB_GMP_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     # Mandatory, it fails on 32-bits. 
     export ABI="${BITS}"
@@ -581,7 +581,7 @@ function do_mpfr()
   (
     cd "${XBB_BUILD}/${XBB_MPFR_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -613,7 +613,7 @@ function do_mpc()
   (
     cd "${XBB_BUILD}/${XBB_MPC_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -645,7 +645,7 @@ function do_isl()
   (
     cd "${XBB_BUILD}/${XBB_ISL_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -677,7 +677,7 @@ function do_nettle()
   (
     cd "${XBB_BUILD}/${XBB_NETTLE_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-implicit-fallthrough -Wno-deprecated-declarations"
 
@@ -727,7 +727,7 @@ function do_tasn1()
   (
     cd "${XBB_BUILD}/${XBB_TASN1_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-logical-op -Wno-missing-prototypes -Wno-implicit-fallthrough -Wno-format-truncation"
 
@@ -769,7 +769,7 @@ function do_gnutls()
   (
     cd "${XBB_BUILD}/${XBB_GNUTLS_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-parentheses -Wno-bad-function-cast -Wno-unused-macros -Wno-bad-function-cast -Wno-unused-variable -Wno-pointer-sign -Wno-implicit-fallthrough -Wno-format-truncation -Wno-missing-prototypes -Wno-missing-declarations -Wno-shadow -Wno-sign-compare"
   
@@ -815,7 +815,7 @@ function do_m4()
   (
     cd "${XBB_BUILD}/${XBB_M4_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -827,7 +827,7 @@ function do_m4()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/m4 --version
   )
@@ -855,7 +855,7 @@ function do_gawk()
   (
     cd "${XBB_BUILD}/${XBB_GAWK_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -868,7 +868,7 @@ function do_gawk()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/awk --version
   )
@@ -896,7 +896,7 @@ function do_autoconf()
   (
     cd "${XBB_BUILD}/${XBB_AUTOCONF_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -908,7 +908,7 @@ function do_autoconf()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/autoconf --version
   )
@@ -936,7 +936,7 @@ function do_automake()
   (
     cd "${XBB_BUILD}/${XBB_AUTOMAKE_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -948,7 +948,7 @@ function do_automake()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/automake --version
   )
@@ -977,7 +977,7 @@ function do_libtool()
   (
     cd "${XBB_BUILD}/${XBB_LIBTOOL_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -989,7 +989,7 @@ function do_libtool()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/libtool --version
   )
@@ -1017,7 +1017,7 @@ function do_gettext()
   (
     cd "${XBB_BUILD}/${XBB_GETTEXT_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-discarded-qualifiers"
 
@@ -1031,7 +1031,7 @@ function do_gettext()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/gettext --version
   )
@@ -1059,7 +1059,7 @@ function do_patch()
   (
     cd "${XBB_BUILD}/${XBB_PATCH_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1071,7 +1071,7 @@ function do_patch()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/patch --version
   )
@@ -1099,7 +1099,7 @@ function do_diffutils()
   (
     cd "${XBB_BUILD}/${XBB_DIFFUTILS_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1111,7 +1111,7 @@ function do_diffutils()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/diff --version
   )
@@ -1139,7 +1139,7 @@ function do_bison()
   (
     cd "${XBB_BUILD}/${XBB_BISON_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1151,7 +1151,7 @@ function do_bison()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/bison --version
   )
@@ -1180,7 +1180,7 @@ function do_make()
   (
     cd "${XBB_BUILD}/${XBB_MAKE_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1192,7 +1192,7 @@ function do_make()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/make --version
   )
@@ -1221,7 +1221,7 @@ function do_libiconv()
   (
     cd "${XBB_BUILD}/${XBB_LIBICONV_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1261,7 +1261,7 @@ function do_wget()
   (
     cd "${XBB_BUILD}/${XBB_WGET_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-implicit-function-declaration"
     # export CXXFLAGS="${CXXFLAGS} "
@@ -1280,7 +1280,7 @@ function do_wget()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/wget --version
   )
@@ -1310,7 +1310,7 @@ function do_texinfo()
   (
     cd "${XBB_BUILD}/${XBB_TEXINFO_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1322,7 +1322,7 @@ function do_texinfo()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/texi2pdf --version
   )
@@ -1355,7 +1355,7 @@ function do_pkg_config()
   (
     cd "${XBB_BUILD}/${XBB_PKG_CONFIG_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-unused-value"
 
@@ -1371,7 +1371,7 @@ function do_pkg_config()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/pkg-config --version
   )
@@ -1400,7 +1400,7 @@ function do_patchelf()
   (
     cd "${XBB_BUILD}/${XBB_PATCHELF_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1412,7 +1412,7 @@ function do_patchelf()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/patchelf --version
   )
@@ -1440,7 +1440,7 @@ function do_flex()
   (
     cd "${XBB_BUILD}/${XBB_FLEX_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./autogen.sh
     ./configure --help
@@ -1453,7 +1453,7 @@ function do_flex()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/flex --version
   )
@@ -1482,7 +1482,7 @@ function do_perl()
   (
     cd "${XBB_BUILD}/${XBB_PERL_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     set +e
     # Exits with error.
@@ -1505,7 +1505,7 @@ function do_perl()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/perl --version
   )
@@ -1536,7 +1536,7 @@ function do_cmake()
   (
     cd "${XBB_BUILD}/${XBB_CMAKE_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     # Normally it would be much happier with dynamic zlib and curl.
 
@@ -1555,7 +1555,7 @@ function do_cmake()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/cmake --version
   )
@@ -1583,7 +1583,7 @@ function do_python()
   (
     cd "${XBB_BUILD}/${XBB_PYTHON_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     ./configure --help
 
@@ -1609,7 +1609,7 @@ function do_python()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/python --version
 
@@ -1654,7 +1654,7 @@ function do_scons()
   (
     cd "${XBB_BUILD}/${XBB_SCONS_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     "${XBB}"/bin/python setup.py install --prefix="${XBB}"
   )
@@ -1682,7 +1682,7 @@ function do_git()
   (
     cd "${XBB_BUILD}/${XBB_GIT_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     export LDFLAGS="-ldl -L${XBB}/lib ${LDFLAGS}"
 
@@ -1700,7 +1700,7 @@ function do_git()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/git --version
   )
@@ -1728,14 +1728,14 @@ function do_dos2unix()
   (
     cd "${XBB_BUILD}/${XBB_DOS2UNIX_FOLDER}"
 
-    xbb_activate
+    xbb_activate_dev
 
     make prefix="${XBB}" -j${MAKE_CONCURRENCY} clean all
     make prefix="${XBB}" strip install
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/unix2dos --version
   )
@@ -1766,7 +1766,7 @@ function do_native_binutils()
     mkdir -p "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}"-native-build
     cd "${XBB_BUILD}/${XBB_BINUTILS_FOLDER}"-native-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1787,7 +1787,7 @@ function do_native_binutils()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/size --version
   )
@@ -1821,7 +1821,7 @@ function do_native_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
     cd "${XBB_BUILD}/${XBB_GCC_FOLDER}"-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare"
@@ -1845,7 +1845,7 @@ function do_native_gcc()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/g++ --version
 
@@ -1906,7 +1906,7 @@ function do_mingw_binutils()
     mkdir -p "${XBB_BUILD}/${XBB_MINGW_BINUTILS_FOLDER}"-mingw-build
     cd "${XBB_BUILD}/${XBB_MINGW_BINUTILS_FOLDER}"-mingw-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare"
     # export LDFLAGS="-static-libstdc++ ${LDFLAGS}"
@@ -1930,7 +1930,7 @@ function do_mingw_binutils()
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-size --version
   )
@@ -1971,7 +1971,7 @@ function do_mingw_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_MINGW_FOLDER}"-headers-build
     cd "${XBB_BUILD}/${XBB_MINGW_FOLDER}"-headers-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export PATH="${XBB}/bin":${PATH}
     # export LDFLAGS="-static-libstdc++ ${LDFLAGS}"
@@ -2017,7 +2017,7 @@ function do_mingw_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_MINGW_GCC_FOLDER}"-mingw-build
     cd "${XBB_BUILD}/${XBB_MINGW_GCC_FOLDER}"-mingw-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare -Wno-implicit-function-declaration -Wno-missing-prototypes"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare -Wno-type-limits"
@@ -2054,7 +2054,7 @@ function do_mingw_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_MINGW_FOLDER}"-crt-build
     cd "${XBB_BUILD}/${XBB_MINGW_FOLDER}"-crt-build
 
-    xbb_activate
+    xbb_activate_dev
 
     # Overwrite the flags, -ffunction-sections -fdata-sections result in
     # {standard input}: Assembler messages:
@@ -2118,7 +2118,7 @@ function do_mingw_gcc()
     mkdir -p "${XBB_BUILD}/${XBB_MINGW_GCC_FOLDER}"-mingw-build
     cd "${XBB_BUILD}/${XBB_MINGW_GCC_FOLDER}"-mingw-build
 
-    xbb_activate
+    xbb_activate_dev
 
     export CFLAGS="${CFLAGS} -Wno-sign-compare -Wno-implicit-function-declaration -Wno-missing-prototypes"
     export CXXFLAGS="${CXXFLAGS} -Wno-sign-compare -Wno-type-limits"
@@ -2130,21 +2130,29 @@ function do_mingw_gcc()
   (
     cd "${XBB}"
 
-    xbb_activate_run
+    xbb_activate
 
-    set +e
+    if true
+    then
 
-    find ${MINGW_TARGET} -name '*.so' -type f -print -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
-    find ${MINGW_TARGET} -name '*.so.*'  -type f -print -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
-    find ${MINGW_TARGET} -name '*.a'  -type f  -print -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
-
-    find lib/gcc/${MINGW_TARGET} -name '*.a'  -type f  -print -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
+      set +e
+      find ${MINGW_TARGET} -name '*.so' -type f \
+        -print \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
+      find ${MINGW_TARGET} -name '*.so.*'  -type f \
+        -print \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
+      # Note: without ranlib, windows builds failed.
+      find ${MINGW_TARGET} lib/gcc/${MINGW_TARGET} -name '*.a'  -type f  -print \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \; \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-ranlib {} \;
+      set -e
     
-    set -e
+    fi
   )
 
   (
-    xbb_activate_run
+    xbb_activate
 
     "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-g++ --version
 
@@ -2177,9 +2185,7 @@ do_strip_libs()
   (
     cd "${XBB}"
 
-    xbb_activate_run
-
-    set +e
+    xbb_activate
 
     if [ -f "${XBB}"/bin/strip ]
     then
@@ -2191,11 +2197,33 @@ do_strip_libs()
       STRIP=strip
     fi
 
-    # -type f to skip links.
-    find lib* -name '*.so' -type f -print -exec "${STRIP}" --strip-debug {} \;
-    find lib* -name '*.so.*'  -type f -print -exec "${STRIP}" --strip-debug {} \;
-    find lib* -name '*.a'  -type f  -print -exec "${STRIP}" --strip-debug {} \;
+    if [ -f "${XBB}"/bin/ranlib ]
+    then
+      RANLIB="${XBB}"/bin/ranlib
+    elif [ -f "${XBB_BOOTSTRAP}"/bin/ranlib ]
+    then
+      RANLIB="${XBB_BOOTSTRAP}"/bin/ranlib
+    else
+      RANLIB=strip
+    fi
 
+    echo
+    echo "Stripping libraries..."
+
+    set +e
+    # -type f to skip links.
+    find lib* -name '*.so' -type f \
+      -print \
+      -exec "${STRIP}" --strip-debug {} \;
+    find lib* -name '*.so.*' -type f \
+      -print \
+      -exec "${STRIP}" --strip-debug {} \;
+    find lib* -type f \
+      -name '*.a' \
+      -not -path 'lib/gcc/*-w64-mingw32/*'  \
+      -print \
+      -exec "${STRIP}" --strip-debug {} \; \
+      -exec "${RANLIB}" {} \;
     set -e
   )
 }
@@ -2218,7 +2246,7 @@ function do_cleaunup()
 # on previous ones.
 
 # For extra safety, the ${XBB} is not permanently added to PATH;
-# ${XBB} and ${XBB_BOOTSTRAP} are added only with xbb_activate 
+# ${XBB} and ${XBB_BOOTSTRAP} are added only with xbb_activate_dev 
 # in sub-shells.
 
 # -----------------------------------------------------------------------------
@@ -2240,7 +2268,7 @@ function do_cleaunup()
 
 # -----------------------------------------------------------------------------
 
-if true
+if false
 then
 
   # New zlib, used in most of the tools.
@@ -2266,7 +2294,7 @@ then
 
 fi
 
-if true
+if false
 then
 
   do_tasn1
@@ -2287,7 +2315,7 @@ then
 
 fi
 
-if true
+if false
 then
 
   # Third party tools.
@@ -2306,7 +2334,7 @@ then
   do_patchelf
 fi
 
-if true
+if false
 then
 
   do_flex # Requires gettext.
@@ -2322,7 +2350,7 @@ then
 
 fi
 
-if true
+if false
 then
 
   # Native binutils and gcc.
@@ -2331,13 +2359,32 @@ then
 
 fi
 
-if true
+if false
 then
 
   # mingw-w64 binutils and gcc.
   do_mingw_binutils # Require gmp, mpfr, mpc, isl.
   do_mingw_gcc # Require gmp, mpfr, mpc, isl.
 
+fi
+
+if true
+then
+
+  yum install -y libudev-devel 
+  (
+    cd "${XBB}"
+
+    xbb_activate
+
+    echo
+    echo "Stripping mingw libraries..."
+
+    find ${MINGW_TARGET} lib/gcc/${MINGW_TARGET} -name '*.a' -type f  \
+        -print \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \; \
+        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-ranlib {} \;
+  )
 fi
 
 # Strip debug info from *.a and *.so.

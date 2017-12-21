@@ -4,7 +4,7 @@ ENTRYPOINT ["linux32"]
 WORKDIR /root
 
 ADD image /xbb-input
-RUN linux32 bash -x /xbb-input/build.sh
+RUN linux32 bash -x /xbb-input/build-v1.sh
 
 CMD ["/bin/bash"]
 
