@@ -21,24 +21,36 @@ IFS=$'\n\t'
 
 # Script to build a Docker image with the xPack Build Box (xbb).
 #
-# Building the newest tools on CentOS 6 directly seems now possible, but
+# Building the newest tools on CentOS 6 directly may be possible, but
 # with some limitations; it is debatable if they are relevant or not.
 # However it is not guaranteed that the old GCC 4.4 will continue to 
 # build future versions.
-# So an intermediate solution is used, which includes the most recent 
-# versions that can be build with GCC 4.4. This intermediate version is 
-# used to build the final tools.
+# To guarantee the peace of mind for some time, an intermediate solution 
+# is used, which includes the most recent versions that can be build 
+# with GCC 4.4. This intermediate version is used to build the final
+# tools.
 
-# Header files have been installed in:
+# To activate the new build environment, use:
+#
+#   $ source /opt/xbb/xbb.sh
+#   $ xbb_activate
+#
+# This will adjust the PATH and LD_LIBRARY_PATH to include the
+# /opt/xbb folders.
+
+# If it is necessary to build some other development tools, use:
+#
+#   $ xbb_activate_dev
+#
+# This will add some environment variable that include the
+# Headers and libraries.
+
+# For completeness, the header files have been installed in:
 #    /opt/xbb/include
 
 # Libraries have been installed in:
 #    /opt/xbb/lib
 
-# To activate the new build environment, use:
-#
-#   $ source /opt/xbb/xbb.sh
-#   $ xbb_activate_dev
 
 # If you ever happen to want to link against installed libraries
 # in a given directory, LIBDIR, you must either use libtool, and
@@ -58,7 +70,8 @@ IFS=$'\n\t'
 # /opt/xbb/bin/patchelf --version
 # /opt/xbb/bin/patchelf: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.21' not found (required by /opt/xbb/bin/patchelf)
 
-# Credits: Inspired by Holy Build Box build script.
+# Credits: Initially inspired by the Holy Build Box build script,
+# but later diverged quite a lot.
 
 XBB_INPUT="/xbb-input"
 XBB_DOWNLOAD="/tmp/xbb-download"
@@ -110,6 +123,21 @@ export CXX=g++
 cat <<'__EOF__' > "${XBB}"/xbb.sh
 
 export XBB_FOLDER="/opt/xbb"
+
+xbb_activate()
+{
+  PATH=${PATH:-""}
+  export PATH="${XBB_FOLDER}"/bin:${PATH}
+
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
+  export LD_LIBRARY_PATH="${XBB_FOLDER}/lib:${LD_LIBRARY_PATH}"
+
+  UNAME_ARCH=$(uname -p)
+  if [ "${UNAME_ARCH}" == "x86_64" ]
+  then
+    export LD_LIBRARY_PATH="${XBB_FOLDER}/lib64:${LD_LIBRARY_PATH}"
+  fi
+}
 
 function xbb_activate_param()
 {
@@ -164,21 +192,6 @@ function xbb_activate_param()
   echo
   echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
-}
-
-xbb_activate()
-{
-  PATH=${PATH:-""}
-  export PATH="${XBB_FOLDER}"/bin:${PATH}
-
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-""}
-  export LD_LIBRARY_PATH="${XBB_FOLDER}/lib:${LD_LIBRARY_PATH}"
-
-  UNAME_ARCH=$(uname -p)
-  if [ "${UNAME_ARCH}" == "x86_64" ]
-  then
-    export LD_LIBRARY_PATH="${XBB_FOLDER}/lib64:${LD_LIBRARY_PATH}"
-  fi
 }
 
 xbb_activate_dev()
@@ -259,7 +272,12 @@ function extract()
   (
     xbb_activate
 
-    tar xf "${ARCHIVE_NAME}"
+    if [[ "${ARCHIVE_NAME}" == *zip ]]
+    then
+      unzip "${ARCHIVE_NAME}" -d "$(basename ${ARCHIVE_NAME} ".zip")"
+    else
+      tar xf "${ARCHIVE_NAME}"
+    fi
   )
 }
 
@@ -297,19 +315,20 @@ function eval_bool()
 
 # =============================================================================
 
-function do_zlib() 
+# http://zlib.net
+# http://zlib.net/fossils/
+# 2017-01-15
+XBB_ZLIB_VERSION="1.2.11"
+XBB_ZLIB_FOLDER="zlib-${XBB_ZLIB_VERSION}"
+XBB_ZLIB_ARCHIVE="${XBB_ZLIB_FOLDER}.tar.gz"
+# XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
+XBB_ZLIB_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_ZLIB_ARCHIVE}"
+
+function do_native_zlib() 
 {
-  # http://zlib.net
-  # http://zlib.net/fossils/
-  # 2017-01-15
-  XBB_ZLIB_VERSION="1.2.11"
-  XBB_ZLIB_FOLDER="zlib-${XBB_ZLIB_VERSION}"
-  XBB_ZLIB_ARCHIVE="${XBB_ZLIB_FOLDER}.tar.gz"
-  # XBB_ZLIB_URL="http://zlib.net/fossils/${XBB_ZLIB_ARCHIVE}"
-  XBB_ZLIB_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_ZLIB_ARCHIVE}"
 
   echo
-  echo "Building zlib ${XBB_ZLIB_VERSION}..."
+  echo "Building native zlib ${XBB_ZLIB_VERSION}..."
 
   cd "${XBB_BUILD}"
 
@@ -329,6 +348,51 @@ function do_zlib()
 
     make -j${MAKE_CONCURRENCY}
     make install
+  )
+}
+
+function do_mingw_zlib() 
+{
+
+  echo
+  echo "Building mingw zlib ${XBB_ZLIB_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_ZLIB_ARCHIVE}" "${XBB_ZLIB_URL}"
+
+  (
+    # MINGW_TARGET
+    cp -r "${XBB_BUILD}/${XBB_ZLIB_FOLDER}" "${XBB_BUILD}/${XBB_ZLIB_FOLDER}-${MINGW_TARGET}"
+    cd "${XBB_BUILD}/${XBB_ZLIB_FOLDER}-${MINGW_TARGET}"
+
+    xbb_activate_dev
+
+    sed -ie "s,dllwrap,${MINGW_TARGET}-dllwrap," win32/Makefile.gcc
+
+    ./configure --help
+
+    ./configure \
+      --prefix="${XBB}/${MINGW_TARGET}" \
+      -shared \
+      -static
+
+    make -f win32/Makefile.gcc \
+      -j${MAKE_CONCURRENCY} \
+      PREFIX="${MINGW_TARGET}-" 
+
+    install -m644 -t "${XBB}/${MINGW_TARGET}/include" zlib.h zconf.h
+    install -m644 -t "${XBB}/${MINGW_TARGET}/lib" libz.a 
+    install -m644 -t "${XBB}/${MINGW_TARGET}/lib" libz.dll.a
+    install -m755 -t "${XBB}/${MINGW_TARGET}/bin" zlib1.dll
+    
+    mkdir -p "${XBB}/${MINGW_TARGET}/lib/pkgconfig"
+    sed "s,@prefix@,${XBB}/${MINGW_TARGET},;s,@exec_prefix@,\${prefix},;s,@libdir@,\${exec_prefix}/lib,;s,@sharedlibdir@,\${libdir},;s,@includedir@,\${prefix}/include,;s,@VERSION@,${XBB_ZLIB_VERSION}," < zlib.pc.in > "${XBB}/${MINGW_TARGET}/lib/pkgconfig/zlib.pc"
+    cat "${XBB}/${MINGW_TARGET}/lib/pkgconfig/zlib.pc"
+
+    ${MINGW_TARGET}-strip -x -g "${XBB}/${MINGW_TARGET}/bin/"zlib1.dll
+    ${MINGW_TARGET}-strip -g "${XBB}/${MINGW_TARGET}/lib/"libz.a      
+    ${MINGW_TARGET}-strip -g "${XBB}/${MINGW_TARGET}/lib/"libz.dll.a      
   )
 }
 
@@ -1636,9 +1700,11 @@ function do_python()
 function do_scons() 
 {
   # http://scons.org
-  # https://sourceforge.net/projects/scons/files/scons/3.0.1/
+  # https://sourceforge.net/projects/scons/files/scons/
+
   # 2017-09-16
   XBB_SCONS_VERSION="3.0.1"
+
   XBB_SCONS_FOLDER="scons-${XBB_SCONS_VERSION}"
   XBB_SCONS_ARCHIVE="${XBB_SCONS_FOLDER}.tar.gz"
   # XBB_SCONS_URL="https://sourceforge.net/projects/scons/files/scons/${XBB_SCONS_VERSION}/${XBB_SCONS_ARCHIVE}"
@@ -2136,14 +2202,20 @@ function do_mingw_gcc()
     then
 
       set +e
-      find ${MINGW_TARGET} -name '*.so' -type f \
+      find ${MINGW_TARGET} \
+        -name '*.so' -type f \
         -print \
         -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
-      find ${MINGW_TARGET} -name '*.so.*'  -type f \
+      find ${MINGW_TARGET} \
+        -name '*.so.*'  \
+        -type f \
         -print \
         -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \;
       # Note: without ranlib, windows builds failed.
-      find ${MINGW_TARGET} lib/gcc/${MINGW_TARGET} -name '*.a'  -type f  -print \
+      find ${MINGW_TARGET} lib/gcc/${MINGW_TARGET} \
+        -name '*.a'  \
+        -type f  \
+        -print \
         -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \; \
         -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-ranlib {} \;
       set -e
@@ -2180,6 +2252,160 @@ __EOF__
 
 # -----------------------------------------------------------------------------
 
+# WARNING: not functional!
+
+function do_nsis() 
+{
+  # http://nsis.sourceforge.net/
+  # https://sourceforge.net/projects/nsis/files/
+
+  # 2016-04-02
+  XBB_NSIS_MAJOR_VERSION="2"
+  XBB_NSIS_MINOR_VERSION="51"
+  XBB_NSIS_VERSION="${XBB_NSIS_MAJOR_VERSION}.${XBB_NSIS_MINOR_VERSION}"
+  
+  # 2017-08-01
+  # XBB_NSIS_MAJOR_VERSION="3"
+  # XBB_NSIS_MINOR_VERSION="02"
+  # XBB_NSIS_VERSION="${XBB_NSIS_MAJOR_VERSION}.${XBB_NSIS_MINOR_VERSION}.1"
+
+  XBB_NSIS_FOLDER="nsis-${XBB_NSIS_VERSION}-src"
+  XBB_NSIS_ARCHIVE="${XBB_NSIS_FOLDER}.tar.bz2"
+  XBB_NSIS_URL="https://sourceforge.net/projects/nsis/files/NSIS%20${XBB_NSIS_MAJOR_VERSION}/${XBB_NSIS_VERSION}/${XBB_NSIS_ARCHIVE}"
+  # XBB_NSIS_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_NSIS_ARCHIVE}"
+
+  if false
+  then
+
+  XBB_NSIS_ZLIB_FOLDER="nsis-${XBB_NSIS_VERSION}"
+  XBB_NSIS_ZLIB_ARCHIVE="${XBB_NSIS_ZLIB_FOLDER}.zip"
+  # XBB_NSIS_ZLIB_URL="https://sourceforge.net/projects/nsis/files/NSIS%20${XBB_NSIS_MAJOR_VERSION}/${XBB_NSIS_VERSION}/${XBB_NSIS_ZLIB_ARCHIVE}"
+  XBB_NSIS_ZLIB_URL="https://github.com/gnu-mcu-eclipse/files/raw/master/libs/${XBB_NSIS_ZLIB_ARCHIVE}"
+  
+  fi
+
+  XBB_NSIS_PREFIX="${XBB}/share/nsis"
+
+  echo
+  echo "Building nsis ${XBB_NSIS_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_NSIS_ARCHIVE}" "${XBB_NSIS_URL}"
+
+  if false
+  then
+
+    download "${XBB_NSIS_ZLIB_ARCHIVE}" "${XBB_NSIS_ZLIB_URL}"
+
+    unzip "${XBB_DOWNLOAD}/${XBB_NSIS_ZLIB_ARCHIVE}" -d "${XBB}/share"
+    mv "${XBB}/share/${XBB_NSIS_ZLIB_FOLDER}" "${XBB_NSIS_PREFIX}"
+    ls -l "${XBB_NSIS_PREFIX}"
+
+  fi
+
+  # http://nsis.sourceforge.net/Docs/AppendixG.html#build_posix
+
+  # http://blog.shahada.abubakar.net/post/build-nsis-for-centos
+  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=nsis
+
+  (
+    cd "${XBB_BUILD}/${XBB_NSIS_FOLDER}"
+
+    xbb_activate_dev
+
+    gcc --version
+
+    scons --version
+    scons --help-options
+
+    # http://scons.org/doc/3.0.1/PDF/scons-user.pdf
+
+    # fails while compiling Contrib/System/Source/CallCPP.S
+    rm -rf Contrib/System
+
+    scons \
+      XGCC_W32_PREFIX="${MINGW_TARGET}-" \
+      VERSION="${XBB_NSIS_VERSION}" \
+      PREFIX="${XBB}" \
+      PREFIX_CONF="${XBB}"/etc \
+      SKIPUTILS='NSIS Menu' \
+      STRIP_CP=false \
+      ZLIB_W32="${XBB}/${MINGW_TARGET}" \
+      install
+
+    # Alternate: use the .zip archive and build only the compiler
+    # The trick is to match the location of the main nsis folder
+    # with the location of the binary.
+    # Unfortunately the .zip does not work on 32-bits.
+    echo scons \
+      SKIPSTUBS=all \
+      SKIPPLUGINS=all \
+      SKIPUTILS=all \
+      SKIPMISC=all \
+      NSIS_CONFIG_CONST_DATA=no \
+      PREFIX="${XBB}" \
+      install-compiler 
+  )
+
+  (
+    cd /tmp
+
+    xbb_activate
+
+# Note: __EOF__ is quoted to prevent substitutions here.
+    cat <<'__EOF__' > /tmp/example1.nsi
+; example1.nsi
+;
+; This script is perhaps one of the simplest NSIs you can make. All of the
+; optional settings are left to their default settings. The installer simply 
+; prompts the user asking them where to install, and drops a copy of example1.nsi
+; there. 
+
+;--------------------------------
+
+; The name of the installer
+Name "Example1"
+
+; The file to write
+OutFile "example1.exe"
+
+; The default installation directory
+InstallDir $DESKTOP\Example1
+
+; Request application privileges for Windows Vista
+RequestExecutionLevel user
+
+;--------------------------------
+
+; Pages
+
+Page directory
+Page instfiles
+
+;--------------------------------
+
+; The stuff to install
+Section "" ;No components page, name is not important
+
+  ; Set output path to the installation directory.
+  SetOutPath $INSTDIR
+  
+  ; Put file there
+  File example1.nsi
+  
+SectionEnd ; end the section
+__EOF__
+# The above marker must start in the first column.
+
+    "${XBB}"/bin/makensis /tmp/example1.nsi
+  )
+
+  hash -r
+}
+
+# -----------------------------------------------------------------------------
+
 do_strip_libs() 
 {
   (
@@ -2187,6 +2413,7 @@ do_strip_libs()
 
     xbb_activate
 
+    local STRIP
     if [ -f "${XBB}"/bin/strip ]
     then
       STRIP="${XBB}"/bin/strip
@@ -2197,6 +2424,7 @@ do_strip_libs()
       STRIP=strip
     fi
 
+    local RANLIB
     if [ -f "${XBB}"/bin/ranlib ]
     then
       RANLIB="${XBB}"/bin/ranlib
@@ -2212,13 +2440,18 @@ do_strip_libs()
 
     set +e
     # -type f to skip links.
-    find lib* -name '*.so' -type f \
+    find lib* \
+      -type f \
+      -name '*.so' \
       -print \
       -exec "${STRIP}" --strip-debug {} \;
-    find lib* -name '*.so.*' -type f \
+    find lib* \
+      -type f \
+      -name '*.so.*' \
       -print \
       -exec "${STRIP}" --strip-debug {} \;
-    find lib* -type f \
+    find lib* \
+      -type f \
       -name '*.a' \
       -not -path 'lib/gcc/*-w64-mingw32/*'  \
       -print \
@@ -2268,11 +2501,11 @@ function do_cleaunup()
 
 # -----------------------------------------------------------------------------
 
-if false
+if true
 then
 
   # New zlib, used in most of the tools.
-  do_zlib
+  do_native_zlib
 
   do_openssl
   do_curl
@@ -2294,7 +2527,7 @@ then
 
 fi
 
-if false
+if true
 then
 
   do_tasn1
@@ -2315,7 +2548,7 @@ then
 
 fi
 
-if false
+if true
 then
 
   # Third party tools.
@@ -2334,7 +2567,7 @@ then
   do_patchelf
 fi
 
-if false
+if true
 then
 
   do_flex # Requires gettext.
@@ -2345,12 +2578,17 @@ then
   do_python
   do_scons
 
+fi
+
+if true
+then
+
   do_git
   do_dos2unix
 
 fi
 
-if false
+if true
 then
 
   # Native binutils and gcc.
@@ -2359,7 +2597,7 @@ then
 
 fi
 
-if false
+if true
 then
 
   # mingw-w64 binutils and gcc.
@@ -2368,28 +2606,23 @@ then
 
 fi
 
-if true
+# DO NOT enable, nsis not functional.
+if false
 then
 
-  yum install -y libudev-devel 
-  (
-    cd "${XBB}"
+  do_mingw_zlib
+  do_nsis
 
-    xbb_activate
-
-    echo
-    echo "Stripping mingw libraries..."
-
-    find ${MINGW_TARGET} lib/gcc/${MINGW_TARGET} -name '*.a' -type f  \
-        -print \
-        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-strip --strip-debug {} \; \
-        -exec "${XBB}"/bin/${UNAME_ARCH}-w64-mingw32-ranlib {} \;
-  )
 fi
 
 # Strip debug info from *.a and *.so.
 do_strip_libs
 
-do_cleaunup
+if true
+then
+
+  do_cleaunup
+
+fi
 
 # -----------------------------------------------------------------------------
