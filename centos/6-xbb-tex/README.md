@@ -1,8 +1,8 @@
-## 6-xbb
+## 6-xbb-tex
 
 ### Overview
 
-Dockerfile to create a Docker image based on the latest CentOS 6 32-bits development image, plus selected new tools.
+Dockerfile to create a Docker image based on the latest CentOS 6 32/64-bits development image, plus selected new tools and TexLive.
 
 ### Changes
 
@@ -50,7 +50,6 @@ $ source /opt/xbb/xbb.sh
 $ xbb_activate_shared
 ```
 
-
 ### Developer
 
 #### Create
@@ -59,22 +58,24 @@ To create the Docker image locally, use:
 
 ```console
 $ cd ...
-$ docker build --squash --tag "ilegeul/centos32:6-xbb-v1" -f Dockerfile-v1 .
+$ docker build --squash --tag "ilegeul/centos:6-xbb-tex-v1" -f Dockerfile-v1 .
+$ docker build --squash --tag "ilegeul/centos32:6-xbb-tex-v1" -f Dockerfile32-v1 .
 ```
 
 On macOS, to prevent entering sleep, use:
 
 ```console
-$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v1" -f Dockerfile-v1 .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-xbb-tex-v1" -f Dockerfile-v1 .
+$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-tex-v1" -f Dockerfile32-v1 .
 ```
 
 To create a second, third, etc version:
 
 ```console
-$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v2" -f Dockerfile-v2 .
-$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v3" -f Dockerfile-v3 .
-$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v4" -f Dockerfile-v4 .
-$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v5" -f Dockerfile-v5 .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-xbb-tex-v2" -f Dockerfile-v2 .
+$ caffeinate docker build --squash --tag "ilegeul/centos:6-xbb-tex-v3" -f Dockerfile-v3 .
+$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-tex-v2" -f Dockerfile32-v2 .
+$ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-tex-v3" -f Dockerfile32-v3 .
 ```
 
 #### Test
@@ -82,11 +83,10 @@ $ caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v5" -f Dockerfi
 To test the image:
 
 ```console
-$ docker run --interactive --tty ilegeul/centos32:6-xbb
-$ docker run --interactive --tty ilegeul/centos32:6-xbb-v2
-$ docker run --interactive --tty ilegeul/centos32:6-xbb-v3
-$ docker run --interactive --tty ilegeul/centos32:6-xbb-v4
-$ docker run --interactive --tty ilegeul/centos32:6-xbb-v5
+$ docker run --interactive --tty ilegeul/centos:6-xbb-tex-v1
+$ docker run --interactive --tty ilegeul/centos:6-xbb-tex-v2
+$ docker run --interactive --tty ilegeul/centos32:6-xbb-tex-v1
+$ docker run --interactive --tty ilegeul/centos32:6-xbb-tex-v2
 ```
 
 #### Publish
@@ -94,7 +94,8 @@ $ docker run --interactive --tty ilegeul/centos32:6-xbb-v5
 To publish, use:
 
 ```console
-$ docker push "ilegeul/centos32:6-xbb"
+$ docker push "ilegeul/centos:6-xbb-tex-v1"
+$ docker push "ilegeul/centos32:6-xbb-tex-v1"
 ```
 
 ### Credits
