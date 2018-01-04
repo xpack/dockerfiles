@@ -46,6 +46,7 @@ zlib-devel \
 file \
 diffutils \
 cmake \
-libudev-devel
+libudev-devel \
+tcl
 
 # -----------------------------------------------------------------------------
