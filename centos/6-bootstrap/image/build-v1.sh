@@ -1397,6 +1397,7 @@ function do_native_gcc()
   XBB_GCC_FOLDER="gcc-${XBB_GCC_VERSION}"
   XBB_GCC_ARCHIVE="${XBB_GCC_FOLDER}.tar.xz"
   XBB_GCC_URL="https://ftp.gnu.org/gnu/gcc/gcc-${XBB_GCC_VERSION}/${XBB_GCC_ARCHIVE}"
+  XBB_GCC_BRANDING="xPack Build Box Bootstrap GCC\x2C ${BITS}-bits"
 
   # Requires gmp, mpfr, mpc, isl.
   echo
@@ -1423,6 +1424,7 @@ function do_native_gcc()
     "${XBB_BUILD}/${XBB_GCC_FOLDER}/configure" \
       --prefix="${XBB}" \
       --build="${BUILD}" \
+      --with-pkgversion="${XBB_GCC_BRANDING}" \
       --enable-languages=c,c++ \
       --enable-static \
       --disable-multilib \
