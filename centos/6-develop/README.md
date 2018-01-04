@@ -45,3 +45,13 @@ $ docker push "ilegeul/centos:6-develop-v1"
 $ docker push "ilegeul/centos32:6-develop-v1"
 ```
 
+#### Copy & Paste
+
+```bash
+caffeinate docker build --squash --tag "ilegeul/centos:6-develop-v1" -f Dockerfile-v1 .
+docker push "ilegeul/centos:6-develop-v1"
+caffeinate docker build --squash --tag "ilegeul/centos32:6-develop-v1" -f Dockerfile32-v1 .
+docker push "ilegeul/centos32:6-develop-v1"
+
+```
+

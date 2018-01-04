@@ -98,6 +98,16 @@ $ docker push "ilegeul/centos:6-xbb-v1"
 $ docker push "ilegeul/centos32:6-xbb-v1"
 ```
 
+#### Copy & Paste
+
+```bash
+caffeinate docker build --squash --tag "ilegeul/centos:6-xbb-v1" -f Dockerfile-v1 .
+docker push "ilegeul/centos:6-xbb-v1"
+caffeinate docker build --squash --tag "ilegeul/centos32:6-xbb-v1" -f Dockerfile32-v1 .
+docker push "ilegeul/centos32:6-xbb-v1"
+
+```
+
 ### Credits
 
 The design was heavily inspired by [Holy Build Box](http://phusion.github.io/holy-build-box/), available from [GitHub](https://github.com/phusion/holy-build-box).
