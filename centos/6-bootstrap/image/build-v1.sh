@@ -149,7 +149,7 @@ function xbb_activate_bootstrap()
   UNAME_ARCH=$(uname -p)
   if [ "${UNAME_ARCH}" == "x86_64" ]
   then
-    export LD_LIBRARY_PATH="${XBB}/lib64:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${XBB_FOLDER}/lib64:${LD_LIBRARY_PATH}"
   fi
   echo
   echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs)"
@@ -158,14 +158,14 @@ function xbb_activate_bootstrap()
 
 function xbb_activate_bootstrap_dev()
 {
-  PREFIX_="${XBB}"
+  PREFIX_="${XBB_FOLDER}"
 
   # `-pipe` should make things faster, by using more memory.
   EXTRA_CFLAGS_="-pipe -ffunction-sections -fdata-sections"
   EXTRA_CXXFLAGS_="-pipe -ffunction-sections -fdata-sections"
   # Without -static-libstdc++ it'll pick up the out of date 
   # /usr/lib[64]/libstdc++.so.6
-  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB}/lib\"" 
+  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB_FOLDER}/lib\"" 
 
   xbb_activate_param
 }
