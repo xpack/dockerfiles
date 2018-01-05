@@ -1,4 +1,4 @@
-FROM ilegeul/centos:6-develop-v1
+FROM ilegeul/centos:6-tex-v1
 MAINTAINER Liviu Ionescu <ilg@livius.net>
 WORKDIR /root
 
