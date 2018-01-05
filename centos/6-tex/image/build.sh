@@ -19,7 +19,7 @@ IFS=$'\n\t'
 
 # -----------------------------------------------------------------------------
 
-# Script to add TeX to a Docker image with the xPack Build Box (xbb).
+# Script to add TeX to a CentOS Docker image.
 #
 # The TeX files are installed in 
 #
@@ -35,22 +35,12 @@ IFS=$'\n\t'
 
 XBB_INPUT="/xbb-input"
 XBB_DOWNLOAD="/tmp/xbb-download"
-XBB_TMP="/tmp/xbb"
-
-XBB="/opt/xbb"
-XBB_BUILD="${XBB_TMP}"/xbb-build
-
-XBB_BOOTSTRAP="/opt/xbb-bootstrap"
 
 MAKE_CONCURRENCY=2
 
 # -----------------------------------------------------------------------------
 
-mkdir -p "${XBB_TMP}"
 mkdir -p "${XBB_DOWNLOAD}"
-
-mkdir -p "${XBB}"
-mkdir -p "${XBB_BUILD}"
 
 # -----------------------------------------------------------------------------
 
@@ -76,47 +66,6 @@ export CXX=g++
 
 # -----------------------------------------------------------------------------
 
-# Make the functions available to the entire script.
-source "${XBB}"/xbb.sh
-
-xbb_activate
-
-# -----------------------------------------------------------------------------
-
-function extract()
-{
-  local ARCHIVE_NAME="$1"
-
-  tar xf "${ARCHIVE_NAME}"
-}
-
-function download()
-{
-  local ARCHIVE_NAME="$1"
-  local URL="$2"
-
-  if [ ! -f "${XBB_DOWNLOAD}/${ARCHIVE_NAME}" ]
-  then
-    rm -f "${XBB_DOWNLOAD}/${ARCHIVE_NAME}.download"
-    curl --fail -L -o "${XBB_DOWNLOAD}/${ARCHIVE_NAME}.download" "${URL}"
-    mv "${XBB_DOWNLOAD}/${ARCHIVE_NAME}.download" "${XBB_DOWNLOAD}/${ARCHIVE_NAME}"
-  fi
-}
-
-function download_and_extract()
-{
-  local ARCHIVE_NAME="$1"
-  local URL="$2"
-
-  download "${ARCHIVE_NAME}" "${URL}"
-  extract "${XBB_DOWNLOAD}/${ARCHIVE_NAME}"
-}
-
-function eval_bool()
-{
-  local VAL="$1"
-  [[ "${VAL}" = 1 || "${VAL}" = true || "${VAL}" = yes || "${VAL}" = y ]]
-}
 
 # =============================================================================
 
@@ -125,8 +74,6 @@ function do_texlive()
 
   echo
   echo "Installing texlive..."
-
-  cd "${XBB_BUILD}"
 
   # https://www.tug.org/texlive/acquire-netinstall.html
 
@@ -144,7 +91,7 @@ function do_texlive()
   XBB_TEXLIVE_REPO_URL="${XBB_TEXLIVE_HISTORIC_URL}/systems/texlive/${XBB_TEXLIVE_EDITION}/tlnet-final"
   XBB_TEXLIVE_PREFIX="/opt/texlive"
 
-  download "${XBB_TEXLIVE_ARCHIVE}" "${XBB_TEXLIVE_URL}"
+  wget -O "${XBB_DOWNLOAD}/${XBB_TEXLIVE_ARCHIVE}" "${XBB_TEXLIVE_URL}"
 
 # Create the texlive.profile used to automate the install.
 # These definitions are specific to TeX Live 2016.
@@ -191,6 +138,22 @@ __EOF__
 
     set -e
 
+    # The following errors were encountered:
+    # fmtutil [INFO]: /opt/texlive/texmf-var/web2c/pdftex/cslatex.fmt installed.
+    # fmtutil [ERROR]: running `xetex -ini   -jobname=xetex -progname=xetex -etex xetex.ini </dev/null' return status 127
+    # fmtutil [ERROR]: return error due to options --strict
+    # fmtutil [ERROR]: running `xetex -ini   -jobname=cont-en -progname=context -8bit *cont-en.mkii </dev/null' return status 127
+    # fmtutil [ERROR]: return error due to options --strict
+    # fmtutil [ERROR]: running `xetex -ini   -jobname=xelatex -progname=xelatex -etex xelatex.ini </dev/null' return status 127
+    # fmtutil [ERROR]: return error due to options --strict
+    # fmtutil [ERROR]: running `xetex -ini   -jobname=pdfcsplain -progname=pdfcsplain -etex csplain.ini </dev/null' return status 127
+    # fmtutil [ERROR]: return error due to options --strict
+    # fmtutil [INFO]: Disabled formats: 6
+    # fmtutil [INFO]: Successfully rebuilt formats: 40
+    # fmtutil [INFO]: Failed to build: 4 (xetex/xetex xetex/cont-en xetex/xelatex xetex/pdfcsplain)
+    # fmtutil [INFO]: Total formats: 50
+    # fmtutil [INFO]: exiting with status 4
+
     if [ -f "${XBB_TEXLIVE_PREFIX}"/install-tl.log ]
     then
       cat "${XBB_TEXLIVE_PREFIX}"/install-tl.log 1>&2
@@ -205,9 +168,6 @@ __EOF__
 function do_cleanup()
 {
   rm -rf "${XBB_DOWNLOAD}"
-#  rm -rf "${XBB_BOOTSTARP}"
-  rm -rf "${XBB_BUILD}"
-  rm -rf "${XBB_TMP}"
   rm -rf "${XBB_INPUT}"
 }
 # =============================================================================

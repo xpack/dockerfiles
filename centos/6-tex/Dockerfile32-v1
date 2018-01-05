@@ -1,4 +1,4 @@
-FROM ilegeul/centos32:6-xbb-tex-v1
+FROM ilegeul/centos32:6-develop-v1
 MAINTAINER Liviu Ionescu <ilg@livius.net>
 ENTRYPOINT ["linux32"]
 WORKDIR /root
