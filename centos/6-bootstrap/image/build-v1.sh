@@ -125,7 +125,7 @@ function xbb_activate_param()
   export LDFLAGS="${LDPATHFLAGS} ${EXTRA_LDFLAGS_}"
 
   echo
-  echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
+  echo "xPack Build Box Bootstrap activated! $(lsb_release -is) $(lsb_release -rs), $(gcc --version | grep gcc), $(ldd --version | grep ldd)"
   echo
   echo PATH=${PATH}
   echo
@@ -152,7 +152,7 @@ function xbb_activate_bootstrap()
     export LD_LIBRARY_PATH="${XBB_FOLDER}/lib64:${LD_LIBRARY_PATH}"
   fi
   echo
-  echo "xPack Build Box activated! $(lsb_release -is) $(lsb_release -rs)"
+  echo "xPack Build Box Bootstrap activated! $(lsb_release -is) $(lsb_release -rs)"
 }
 
 
