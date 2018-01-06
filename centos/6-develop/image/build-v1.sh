@@ -22,6 +22,10 @@ IFS=$'\n\t'
 yum install -y yum-plugin-ovl
 yum update -y
 
+# Install the entire development group
+yum groupinstall -y 'Development Tools'
+
+# For just in case, explicitly install packages known to be needed.
 yum install -y \
 redhat-lsb-core \
 gcc-c++ \

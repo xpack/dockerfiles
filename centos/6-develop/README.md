@@ -6,7 +6,7 @@ Dockerfile to create a Docker image based on the latest CentOS 6 32/64-bits, plu
 
 ### Changes
 
-Use `yum` to install a minimal set of existing CentOS development tools; as old as they are, they should be enough to build newer versions of the bootstrap tools.
+Use `yum` to install the CentOS development tools plus selected tools and libraries known to be needed; as old as they are, they should be enough to build newer versions of the bootstrap tools.
 
 ### Developer
 
