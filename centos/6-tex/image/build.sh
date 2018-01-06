@@ -126,19 +126,20 @@ __EOF__
 
     set +e
 
+    # -scheme small, medium, full
     "./install-tl" \
       -repository "${XBB_TEXLIVE_REPO_URL}" \
       -no-gui \
       -lang en \
       -profile "${tmp_profile}" \
-      -scheme full
+      -scheme medium
 
     # Keep no backups (not required, simply makes cache bigger)
     tlmgr option -- autobackup 0
 
     set -e
 
-    # The following errors were encountered:
+    # The following errors may be encountered when installing the full distribution:
     # fmtutil [INFO]: /opt/texlive/texmf-var/web2c/pdftex/cslatex.fmt installed.
     # fmtutil [ERROR]: running `xetex -ini   -jobname=xetex -progname=xetex -etex xetex.ini </dev/null' return status 127
     # fmtutil [ERROR]: return error due to options --strict
