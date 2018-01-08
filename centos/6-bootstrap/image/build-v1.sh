@@ -165,7 +165,8 @@ function xbb_activate_bootstrap_dev()
   EXTRA_CXXFLAGS_="-pipe -ffunction-sections -fdata-sections"
   # Without -static-libstdc++ it'll pick up the out of date 
   # /usr/lib[64]/libstdc++.so.6
-  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,\"${XBB_FOLDER}/lib\"" 
+  # Do not use extra quotes around XBB_FOLDER, tools like guile fail.
+  EXTRA_LDFLAGS_="-static-libstdc++ -Wl,--gc-sections  -Wl,-rpath -Wl,${XBB_FOLDER}/lib" 
 
   xbb_activate_param
 }
