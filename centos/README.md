@@ -26,6 +26,10 @@ Versions:
 * glibc 2.12
 * kernel 4.9.49
 
+### 6-tex-v1
+
+In addition to `6-develop-v1`, this image brings the TexLive 2016 files, required by most builds to create the PDF manuals.
+
 ### 6-bootstrap-v1
 
 On top of the CentOS 6.9 development image, a set of tools are compiled from new source code versions.
@@ -39,10 +43,6 @@ The custom files are in `/opt/xbb-bootstrap`.
 This is the final image, compiled with the bootstrap GCC.
 
 The custom files are in `/opt/xbb`.
-
-### 6-xbb-tex-v1
-
-In addition to `6-xbb-v1`, this image bring the TexLive 2016 files, required by most builds to create the PDF manuals.
 
 ---
 

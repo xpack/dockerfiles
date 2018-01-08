@@ -47,7 +47,6 @@ IFS=$'\n\t'
 #    /opt/xbb/lib
 
 # -static-libstdc++
-# This is a tricky issue, and sometimes a cause for warnings.
 # Without it, testing the binaries before building GCC will fail, since
 # the libstdc++.so.6 is not yet available and the system version is too old.
 # LD_LIBRARY_PATH=/opt/xbb/lib64:/opt/xbb/lib:
@@ -57,8 +56,6 @@ IFS=$'\n\t'
 # Credits: Initially inspired by the Holy Build Box build script,
 # but later diverged quite a lot.
 # Many of the configuration options were inspired by ARCH Linux.
-
-# -----------------------------------------------------------------------------
 
 XBB_INPUT="/xbb-input"
 XBB_DOWNLOAD="/tmp/xbb-download"
@@ -670,7 +667,7 @@ function do_mpfr()
 {
   # http://www.mpfr.org
   # http://www.mpfr.org/mpfr-3.1.6
-  # https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/mpfr
+  # https://www.archlinux.org/packages/core/x86_64/mpfr/
 
   # 7 September 2017
   XBB_MPFR_VERSION="3.1.6"
@@ -706,7 +703,7 @@ function do_mpc()
 {
   # http://www.multiprecision.org/
   # ftp://ftp.gnu.org/gnu/mpc
-  # https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/libmpc
+  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=mingw-w64-libmpc
 
   # February 2015
   XBB_MPC_VERSION="1.0.3"
@@ -815,6 +812,7 @@ function do_libffi()
   )
 }
 
+
 function do_nettle() 
 {
   # https://www.lysator.liu.se/~nisse/nettle/
@@ -916,7 +914,6 @@ function do_gnutls()
 {
   # http://www.gnutls.org/
   # https://www.gnupg.org/ftp/gcrypt/gnutls/
-  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=gnutls-git
 
   # 2017-10-21
   # XBB_GNUTLS_MAJOR_VERSION="3.5"
@@ -1360,6 +1357,161 @@ function do_bison()
   hash -r
 }
 
+function do_libunistring() 
+{
+  # https://www.gnu.org/software/libunistring/
+  # https://ftp.gnu.org/gnu/libunistring/
+  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=libunistring-git
+
+  # 2017-11-30
+  XBB_LIBUNISTRING_VERSION="0.9.8"
+
+  XBB_LIBUNISTRING_FOLDER="libunistring-${XBB_LIBUNISTRING_VERSION}"
+  XBB_LIBUNISTRING_ARCHIVE="${XBB_LIBUNISTRING_FOLDER}.tar.xz"
+  XBB_LIBUNISTRING_URL="https://ftp.gnu.org/gnu/libunistring/${XBB_LIBUNISTRING_ARCHIVE}"
+
+  echo
+  echo "Building libunistring ${XBB_LIBUNISTRING_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_LIBUNISTRING_ARCHIVE}" "${XBB_LIBUNISTRING_URL}"
+
+  (
+    cd "${XBB_BUILD}/${XBB_LIBUNISTRING_FOLDER}"
+
+    xbb_activate_dev
+
+    ./configure --help
+
+    ./configure \
+      --prefix="${XBB}"
+      
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+}
+
+function do_libatomic_ops() 
+{
+  # https://github.com/ivmai/libatomic_ops
+  # https://github.com/ivmai/libatomic_ops/releases
+  # https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/libatomic_ops
+
+  # Dec 24, 2017
+  XBB_LIBATOMIC_OPS_VERSION="7.6.2"
+
+  XBB_LIBATOMIC_OPS_FOLDER="libatomic_ops-${XBB_LIBATOMIC_OPS_VERSION}"
+  # Only .gz available.
+  XBB_LIBATOMIC_OPS_ARCHIVE="${XBB_LIBATOMIC_OPS_FOLDER}.tar.gz"
+  XBB_LIBATOMIC_OPS_URL="https://github.com/ivmai/libatomic_ops/releases/download/v${XBB_LIBATOMIC_OPS_VERSION}/${XBB_LIBATOMIC_OPS_ARCHIVE}"
+
+  echo
+  echo "Building libatomic_ops ${XBB_LIBATOMIC_OPS_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_LIBATOMIC_OPS_ARCHIVE}" "${XBB_LIBATOMIC_OPS_URL}"
+
+  (
+    cd "${XBB_BUILD}/${XBB_LIBATOMIC_OPS_FOLDER}"
+
+    xbb_activate_dev
+
+    ./configure --help
+
+    ./configure \
+      --prefix="${XBB}"
+      
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+}
+
+function do_gc() 
+{
+  # https://github.com/ivmai/bdwgc
+  # https://github.com/ivmai/bdwgc/releases
+  # https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/gc
+
+  # Dec 23, 2017
+  XBB_GC_VERSION="7.6.2"
+
+  XBB_GC_FOLDER="gc-${XBB_GC_VERSION}"
+  # Only .gz available.
+  XBB_GC_ARCHIVE="${XBB_GC_FOLDER}.tar.gz"
+  XBB_GC_URL="https://github.com/ivmai/bdwgc/releases/download/v${XBB_GC_VERSION}/${XBB_GC_ARCHIVE}"
+
+  echo
+  echo "Building gc ${XBB_GC_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GC_ARCHIVE}" "${XBB_GC_URL}"
+
+  (
+    cd "${XBB_BUILD}/${XBB_GC_FOLDER}"
+
+    xbb_activate_dev
+
+    ./configure --help
+
+    ./configure \
+      --prefix="${XBB}" \
+      --enable-cplusplus
+      
+    make -j${MAKE_CONCURRENCY}
+    make install-strip
+  )
+}
+
+function do_guile() 
+{
+  # https://www.gnu.org/software/guile/
+  # https://ftp.gnu.org/gnu/guile/
+  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=guile-git
+
+  # 2017-02-13
+  XBB_GUILE_VERSION="2.0.14"
+
+  # Avoid v2.2.x for now, it is not yet supported by GCC 7.2.
+
+  XBB_GUILE_FOLDER="guile-${XBB_GUILE_VERSION}"
+  # Only .bz2 available.
+  XBB_GUILE_ARCHIVE="${XBB_GUILE_FOLDER}.tar.xz"
+  XBB_GUILE_URL="https://ftp.gnu.org/gnu/guile/${XBB_GUILE_ARCHIVE}"
+
+  echo
+  echo "Building guile ${XBB_GUILE_VERSION}..."
+
+  cd "${XBB_BUILD}"
+
+  download_and_extract "${XBB_GUILE_ARCHIVE}" "${XBB_GUILE_URL}"
+
+  (
+    cd "${XBB_BUILD}/${XBB_GUILE_FOLDER}"
+
+    xbb_activate_dev
+
+    ./configure --help
+
+    ./configure \
+      --prefix="${XBB}" \
+      --disable-error-on-warning
+      
+    make -j${MAKE_CONCURRENCY} LIBS="-lpthread"
+    make install-strip
+  )
+
+  (
+    xbb_activate
+
+    # "${XBB}"/bin/make --version
+  )
+
+  hash -r
+}
+
 function do_make() 
 {
   # https://www.gnu.org/software/make/
@@ -1448,7 +1600,6 @@ function do_wget()
 {  
   # https://www.gnu.org/software/wget/
   # https://ftp.gnu.org/gnu/wget/
-  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=wget-git
 
   # 2016-06-10
   XBB_WGET_VERSION="1.19"
@@ -1583,13 +1734,10 @@ function do_pkg_config()
     export CFLAGS="${CFLAGS} -Wno-unused-value"
 
     ./configure --help
-    glib/configure --help
 
-    # --with-internal-glib fails with
-    # gconvert.c:61:2: error: #error GNU libiconv not in use but included iconv.h is from libiconv
     ./configure \
-      --prefix="${XBB}"\
-      --with-internal-glib 
+      --prefix="${XBB}" \
+      --with-internal-glib
     
     rm -f "${XBB}/bin"/*pkg-config
     make -j${MAKE_CONCURRENCY} 
@@ -1865,7 +2013,7 @@ function do_python()
 
     ./configure --help
 
-    # Python is happier with dynamic zlib and curl.
+    # It is happier with dynamic zlib and curl.
     # Without --enabled-shared the build fails with
     # ImportError: No module named '_struct'
     # --enable-universalsdk is required by -arch.
@@ -2329,7 +2477,7 @@ function do_mingw_gcc()
 
   # https://gcc.gnu.org
   # https://gcc.gnu.org/wiki/InstallingGCC
-  # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=mingw-w64-gcc
+  # https://git.archlinux.org/svntogit/community.git/tree/trunk/PKGBUILD?h=packages/mingw-w64-gcc
 
   # https://ftp.gnu.org/gnu/gcc/
   # 2017-08-14
@@ -2828,86 +2976,66 @@ function do_cleaunup()
 
 # -----------------------------------------------------------------------------
 
+do_libatomic_ops
+do_gc
+do_libffi
+do_libunistring
+do_guile
+
+if false
+then
+
 if true
 then
 
   # New zlib, used in most of the tools.
-  # depends=('glibc')
   do_native_zlib
 
-  # depends=('perl')
   do_openssl
 
-  # depends=('ca-certificates' 'krb5' 'libssh2' 'openssl' 'zlib' 'libpsl' 'libnghttp2')
   do_curl
 
   # Libary, required by tar. 
-  # depends=('sh')
   do_xz
 
   # tar with xz support.
-  # depends=('glibc')
   do_tar # Requires xz.
 
   # Libraries, required by gcc.
-  # depends=('gcc-libs' 'sh')
   do_gmp
-  # depends=('gmp>=5.0')
   do_mpfr
-  # depends=('mpfr')
   do_mpc
-  # depends=('gmp')
   do_isl
 
   # Libraries, required by gnutls.
-  # depends=('glibc' 'gmp')
   do_nettle
-  # depends=('glibc')
   do_tasn1
 
   # Library, required by Python.
-  # depends=('glibc')
   do_expat
 
-  # depends=('glibc')
-  do_libffi
-
-  # Must be done before adding libiconv.
-  # depends=('glibc' 'glib2')
-  do_pkg_config
-
   # Library, required by wget.
-  # depends=()
   do_libiconv
+
+  do_guile
 
 fi
 
 if true
 then
 
-  # depends=('glibc' 'libidn2' 'libtasn1' 'libunistring' 'nettle' 'p11-kit' 'readline' 'zlib')
   do_gnutls # Requires tasn1 & nettle.
  
   # GNU tools.
-  # depends=('glibc')
   do_m4
-  # depends=('glibc' 'mpfr')
   do_gawk
-  # depends=('sh' 'perl' 'awk' 'm4' 'texinfo')
   do_autoconf
-  # depends=('sh' 'perl')
   do_automake
-  # depends=('sh' 'tar' 'glibc')
   do_libtool
-  # depends=('glibc' 'glib2' 'libunistring' 'ncurses')
   do_gettext
-  # depends=('glibc' 'attr')
   do_patch
-  # depends=('libsigsegv')
   do_diffutils
-  # depends=('glibc')
   do_bison
-  # depends=('glibc' 'guile')
   do_make
 
 fi
@@ -2917,17 +3045,16 @@ then
 
   # Third party tools.
 
-  # depends=('libutil-linux' 'gnutls' 'libidn' 'libpsl>=0.7.1-3' 'gpgme')
+  # Must be before adding libiconv.
+  do_pkg_config
+
   do_wget # Requires gnutls, libiconv.
 
   # Required to build PDF manuals.
-  # depends=('coreutils')
   do_texinfo
 
-  # depends ?
   do_patchelf
 
-  # depends=('glibc')
   do_dos2unix
 
 fi
@@ -2935,20 +3062,14 @@ fi
 if true
 then
 
-  # depends=('glibc' 'm4' 'sh')
   do_flex # Requires gettext.
 
-  # depends=('gdbm' 'db' 'glibc')
   do_perl
-  # depends=('curl' 'libarchive' 'shared-mime-info' 'jsoncpp' 'rhash')
   do_cmake
 
-  # depends=('bzip2' 'gdbm' 'openssl' 'zlib' 'expat' 'sqlite' 'libffi')
   do_python
-  # depends=('python2')
   do_scons
 
-  # depends=('curl' 'expat>=2.0' 'perl-error' 'perl>=5.14.0' 'openssl' 'pcre2' 'grep' 'shadow')
   do_git
 
 fi
@@ -2958,7 +3079,6 @@ then
 
   # Native binutils and gcc.
   do_native_binutils # Requires gmp, mpfr, mpc, isl.
-  # makedepends=('binutils>=2.26' 'libmpc' 'gcc-ada' 'doxygen' 'git')
   do_native_gcc # Requires gmp, mpfr, mpc, isl.
 
 fi
@@ -2967,9 +3087,7 @@ if true
 then
 
   # mingw-w64 binutils and gcc.
-  # depends=('zlib')
   do_mingw_binutils # Require gmp, mpfr, mpc, isl.
-  # depends=('zlib' 'libmpc' 'mingw-w64-crt' 'mingw-w64-binutils' 'mingw-w64-winpthreads' 'mingw-w64-headers')
   do_mingw_gcc # Require gmp, mpfr, mpc, isl.
 
 fi
@@ -2980,6 +3098,8 @@ then
 
   do_mingw_zlib
   do_nsis
+
+fi
 
 fi
 
